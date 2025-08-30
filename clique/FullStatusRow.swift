@@ -11,7 +11,18 @@ struct FullStatusRow: View {
     var fullStatus: FullStatus
     
     var body: some View {
-        HStack(alignment: .top, spacing: 8) {
+        HStack(alignment: .top, spacing: 12) {
+            // Initials circle
+            ZStack {
+                Circle()
+                    .fill(Color.black)
+                    .frame(width: 50, height: 50)
+                Text("\(fullStatus.firstName.prefix(1))\(fullStatus.lastName.prefix(1))")
+                    .foregroundColor(.white)
+                    .font(.system(size: 20, weight: .bold))
+            }
+            
+            // Name + status text
             VStack(alignment: .leading, spacing: 4) {
                 HStack {
                     Text(fullStatus.firstName)
@@ -23,7 +34,10 @@ struct FullStatusRow: View {
                     .font(.system(size: 20))
                     .foregroundColor(.secondary)
             }
+            
             Spacer()
+            
+            // Emoji on the right
             Text(fullStatus.statusEmoji)
                 .font(.system(size: 32))
         }
