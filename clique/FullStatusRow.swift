@@ -9,19 +9,26 @@ import SwiftUI
 
 struct FullStatusRow: View {
     var fullStatus: FullStatus
+    
     var body: some View {
-        HStack {
-            Image(systemName: "person.circle.fill").foregroundColor(.blue).font(.system(size: 40))
-            Text(fullStatus.statusEmoji)
-            VStack(alignment: .leading) {
+        HStack(alignment: .top, spacing: 8) {
+            VStack(alignment: .leading, spacing: 4) {
                 HStack {
-                    Text(fullStatus.firstName).font(.system(size: 30))
-                    Text(fullStatus.lastName).font(.system(size: 30))
+                    Text(fullStatus.firstName)
+                        .font(.system(size: 30))
+                    Text(fullStatus.lastName)
+                        .font(.system(size: 30))
                 }
-                Text(fullStatus.statusText).font(.system(size: 20))
+                Text(fullStatus.statusText)
+                    .font(.system(size: 20))
+                    .foregroundColor(.secondary)
             }
-            
+            Spacer()
+            Text(fullStatus.statusEmoji)
+                .font(.system(size: 32))
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.vertical, 4)
     }
 }
 
