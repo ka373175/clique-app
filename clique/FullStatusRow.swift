@@ -20,6 +20,9 @@ struct FullStatusRow: View {
                 Text("\(fullStatus.firstName.prefix(1))\(fullStatus.lastName.prefix(1))")
                     .foregroundColor(.white)
                     .font(.system(size: 20, weight: .bold))
+                Text(fullStatus.statusEmoji ?? "")
+                    .font(.system(size: 16)) // Smaller size for emoji
+                    .offset(x: 15, y: 15) // Adjust offset for bottom-right positioning
             }
             
             // Name + status text
@@ -36,10 +39,6 @@ struct FullStatusRow: View {
             }
             
             Spacer()
-            
-            // Emoji on the right
-            Text(fullStatus.statusEmoji)
-                .font(.system(size: 32))
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(.vertical, 4)

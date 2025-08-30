@@ -8,8 +8,27 @@
 import Foundation
 
 struct FullStatus: Codable {
+    /*
+     statusText: string
+     The status of the user
+     */
     var statusText: String
-    var statusEmoji: String
+    
+    /*
+     statusEmoji: string?
+     The emoji for the user's status
+     */
+    var statusEmoji: String?
+    
+    /*
+     firstName: string
+     The first name of the user
+     */
     var firstName: String
+    
+    /*
+     lastName: string
+     The last name of the user
+     */
     var lastName: String
 }
