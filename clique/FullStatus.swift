@@ -7,7 +7,13 @@
 
 import Foundation
 
-struct FullStatus: Codable {
+struct FullStatus: Codable, Hashable, Identifiable {
+    /*
+     id: int
+     Identifier for swift to conform to Identifiable protocol
+     */
+    var id: Int
+    
     /*
      statusText: string
      The status of the user

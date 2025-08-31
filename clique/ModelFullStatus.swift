@@ -7,7 +7,7 @@
 
 import Foundation
 
-var fullStatuses: [FullStatus] = load("testJson.json")
+var fullStatuses: [FullStatus] = load("manyJson.json")
 
 
 func load<T: Decodable>(_ filename: String) -> T {

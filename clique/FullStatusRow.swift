@@ -12,29 +12,33 @@ struct FullStatusRow: View {
     
     var body: some View {
         HStack(alignment: .top, spacing: 12) {
-            // Initials circle
+            // ZStack: circle + emoji
             ZStack {
+                // Person icon
                 Circle()
                     .fill(Color.black)
                     .frame(width: 50, height: 50)
+                // Initials
                 Text("\(fullStatus.firstName.prefix(1))\(fullStatus.lastName.prefix(1))")
                     .foregroundColor(.white)
                     .font(.system(size: 20, weight: .bold))
+                // Status emoji
                 Text(fullStatus.statusEmoji ?? "")
-                    .font(.system(size: 16)) // Smaller size for emoji
-                    .offset(x: 15, y: 15) // Adjust offset for bottom-right positioning
+                    .font(.system(size: 14)) // Smaller size for emoji
+                    .offset(x: 16, y: 15) // Adjust offset for bottom-right positioning
             }
             
-            // Name + status text
+            // VStack: Name + status text
             VStack(alignment: .leading, spacing: 4) {
+                // HStack: Name
                 HStack {
-                    Text(fullStatus.firstName)
-                        .font(.system(size: 30))
-                    Text(fullStatus.lastName)
-                        .font(.system(size: 30))
+                    Text("\(fullStatus.firstName) \(fullStatus.lastName)")
+                        .font(.system(size: 20))
+                        .lineLimit(1)
                 }
+                // Status text
                 Text(fullStatus.statusText)
-                    .font(.system(size: 20))
+                    .font(.system(size: 15))
                     .foregroundColor(.secondary)
             }
             
