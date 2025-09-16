@@ -11,6 +11,10 @@ struct ContentView: View {
     var body: some View {
         TabView {
             FullStatusList().tabItem{Label("Statuses", systemImage: "list.bullet")}
+            SetStatusView()
+                .tabItem {
+                    Label("Set Status", systemImage: "pencil")
+                }
         }
     }
 }
