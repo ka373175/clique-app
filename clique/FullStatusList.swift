@@ -8,11 +8,26 @@
 import SwiftUI
 
 struct FullStatusList: View {
+    @StateObject private var viewModel = StatusViewModel()
+    
     var body: some View {
-        List(fullStatuses) {
-            fullStatus in FullStatusRow(fullStatus: fullStatus)
+        VStack {
+            if viewModel.isLoading {
+                ProgressView("Loading...")
+            } else if let errorMessage = viewModel.errorMessage {
+                Text(errorMessage)
+                    .foregroundColor(.red)
+                    .padding()
+            } else {
+                List(viewModel.fullStatuses) { fullStatus in
+                    FullStatusRow(fullStatus: fullStatus)
+                }
+                .listStyle(.plain)
+            }
         }
-        .listStyle(.plain) // Remove default list styling and margins
+        .task {
+            await viewModel.fetchStatuses()
+        }
     }
 }
 
