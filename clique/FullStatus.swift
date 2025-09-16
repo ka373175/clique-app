@@ -9,32 +9,40 @@ import Foundation
 
 struct FullStatus: Codable, Hashable, Identifiable {
     /*
-     id: int
+     id: string
      Identifier for swift to conform to Identifiable protocol
      */
-    var id: Int
+    let id: String
     
     /*
      statusText: string
      The status of the user
      */
-    var statusText: String
+    let statusText: String
     
     /*
      statusEmoji: string?
      The emoji for the user's status
      */
-    var statusEmoji: String?
+    let statusEmoji: String?
     
     /*
      firstName: string
      The first name of the user
      */
-    var firstName: String
+    let firstName: String
     
     /*
      lastName: string
      The last name of the user
      */
-    var lastName: String
+    let lastName: String
+    
+    enum CodingKeys: String, CodingKey {
+        case id = "_id"
+        case statusText
+        case statusEmoji
+        case firstName
+        case lastName
+    }
 }

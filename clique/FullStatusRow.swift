@@ -50,5 +50,5 @@ struct FullStatusRow: View {
 }
 
 #Preview {
-    FullStatusRow(fullStatus: fullStatuses[0])
+    FullStatusRow(fullStatus: fullStatusesForTesting[0])
 }
