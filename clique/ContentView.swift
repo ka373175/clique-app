@@ -9,8 +9,8 @@ import SwiftUI
 
 struct ContentView: View {
     var body: some View {
-        VStack {
-            FullStatusList()
+        TabView {
+            FullStatusList().tabItem{Label("Statuses", systemImage: "list.bullet")}
         }
     }
 }
