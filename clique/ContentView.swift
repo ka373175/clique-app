@@ -15,6 +15,10 @@ struct ContentView: View {
                 .tabItem {
                     Label("Set Status", systemImage: "pencil")
                 }
+            AddUserView()
+                .tabItem {
+                    Label("Add User", systemImage: "person.badge.plus")
+                }
         }
     }
 }
