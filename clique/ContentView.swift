@@ -25,7 +25,7 @@ struct ContentView: View {
         TabView {
             NavigationStack {
                 FullStatusList()
-                    .navigationTitle("")  // Optional: Add a title; remove or set to "" for an empty solid bar
+                    .navigationTitle("Statuses")  // Optional: Add a title; remove or set to "" for an empty solid bar
                     .navigationBarTitleDisplayMode(.inline)
             }
             .tabItem {
