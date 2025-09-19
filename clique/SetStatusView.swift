@@ -54,7 +54,7 @@ struct SetStatusView: View {
         errorMessage = nil
         successMessage = nil
         
-        guard let url = URL(string: "https://60q4fmxnb7.execute-api.us-east-2.amazonaws.com/prod/update-status") else { // Replace with your actual API endpoint for updating status
+        guard let url = URL(string: "https://60q4fmxnb7.execute-api.us-east-2.amazonaws.com/prod/update-status/68b7a91d3074862e161cb776") else { // Replace with your actual API endpoint for updating status
             errorMessage = "Invalid URL"
             isLoading = false
             return
