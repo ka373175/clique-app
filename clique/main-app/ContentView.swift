@@ -6,26 +6,26 @@
 //
 
 import SwiftUI
-import UIKit  // Add this import for UIKit elements like UINavigationBarAppearance
+import UIKit
 
 struct ContentView: View {
     init() {
         let appearance = UINavigationBarAppearance()
         appearance.configureWithOpaqueBackground()
-        appearance.backgroundColor = UIColor.systemBackground  // Matches light/dark mode
-        appearance.shadowColor = nil  // Optional: Removes the bottom separator for a cleaner look
+        appearance.backgroundColor = UIColor.systemBackground // Matches light/dark mode
+        appearance.shadowColor = nil // Optional: Removes the bottom separator for a cleaner look
         
         UINavigationBar.appearance().standardAppearance = appearance
         UINavigationBar.appearance().scrollEdgeAppearance = appearance
         UINavigationBar.appearance().compactAppearance = appearance
         UINavigationBar.appearance().compactScrollEdgeAppearance = appearance
     }
-    
+
     var body: some View {
         TabView {
             NavigationStack {
                 FullStatusList()
-                    .navigationTitle("Statuses")  // Optional: Add a title; remove or set to "" for an empty solid bar
+                    .navigationTitle("Statuses")
                     .navigationBarTitleDisplayMode(.inline)
             }
             .tabItem {
