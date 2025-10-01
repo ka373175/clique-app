@@ -9,8 +9,8 @@ import SwiftUI
 
 struct FullStatusList: View {
     @StateObject private var viewModel = StatusViewModel()
-    @State private var errorPresented = false
-    
+    @State private var showErrorAlert = false
+
     var body: some View {
         List(viewModel.fullStatuses) { fullStatus in
             FullStatusRow(fullStatus: fullStatus)
@@ -24,23 +24,19 @@ struct FullStatusList: View {
                 ProgressView("Loading...")
             }
         }
-        .onAppear {
+        .task {
             if viewModel.fullStatuses.isEmpty {
-                Task { await viewModel.fetchStatuses() }
+                await viewModel.fetchStatuses()
             }
         }
         .onChange(of: viewModel.errorMessage) { _, newValue in
-            if newValue != nil {
-                errorPresented = true
-            }
+            showErrorAlert = newValue != nil
         }
-        .alert("Error", isPresented: $errorPresented) {
-            Button("OK") {
-                viewModel.errorMessage = nil
-            }
-        } message: {
+        .alert("Error", isPresented: $showErrorAlert, actions: {
+            Button("OK") { viewModel.errorMessage = nil }
+        }, message: {
             Text(viewModel.errorMessage ?? "")
-        }
+        })
     }
 }
 

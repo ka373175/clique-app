@@ -10,15 +10,18 @@ import UIKit
 
 struct ContentView: View {
     init() {
+        // Match the navigation appearance across contexts (inline title/etc).
         let appearance = UINavigationBarAppearance()
         appearance.configureWithOpaqueBackground()
-        appearance.backgroundColor = UIColor.systemBackground // Matches light/dark mode
-        appearance.shadowColor = nil // Optional: Removes the bottom separator for a cleaner look
-        
+        appearance.backgroundColor = UIColor.systemBackground
+        appearance.shadowColor = nil
+
         UINavigationBar.appearance().standardAppearance = appearance
         UINavigationBar.appearance().scrollEdgeAppearance = appearance
         UINavigationBar.appearance().compactAppearance = appearance
         UINavigationBar.appearance().compactScrollEdgeAppearance = appearance
+
+        // Optionally configure tab bar appearance here if you want consistent look
     }
 
     var body: some View {
@@ -31,12 +34,12 @@ struct ContentView: View {
             .tabItem {
                 Label("Statuses", systemImage: "list.bullet")
             }
-            
+
             SetStatusView()
                 .tabItem {
                     Label("Set Status", systemImage: "pencil")
                 }
-            
+
             AddUserView()
                 .tabItem {
                     Label("Add User", systemImage: "person.badge.plus")

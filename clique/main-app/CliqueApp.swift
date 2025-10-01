@@ -8,7 +8,7 @@
 import SwiftUI
 
 @main
-struct cliqueApp: App {
+struct CliqueApp: App {
     var body: some Scene {
         WindowGroup {
             ContentView()
