@@ -1,5 +1,5 @@
 //
-//  ModelFullStatus.swift
+//  PreviewData.swift
 //  clique
 //
 //  Created by Praveen Kumar on 8/13/25.
@@ -7,25 +7,22 @@
 
 import Foundation
 
-var fullStatusesForTesting: [FullStatus] = load("manyJson.json")
-
+/// Sample data for SwiftUI previews
+var statusesForTesting: [FullStatus] = load("manyJson.json")
 
 func load<T: Decodable>(_ filename: String) -> T {
     let data: Data
-
 
     guard let file = Bundle.main.url(forResource: filename, withExtension: nil)
     else {
         fatalError("Couldn't find \(filename) in main bundle.")
     }
 
-
     do {
         data = try Data(contentsOf: file)
     } catch {
         fatalError("Couldn't load \(filename) from main bundle:\n\(error)")
     }
-
 
     do {
         let decoder = JSONDecoder()

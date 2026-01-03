@@ -50,34 +50,12 @@ struct AddUserView: View {
         errorMessage = nil
         successMessage = nil
         
-        guard let url = URL(string: "https://60q4fmxnb7.execute-api.us-east-2.amazonaws.com/prod/add-user") else { // Replace with your actual API endpoint for adding user
-            errorMessage = "Invalid URL"
-            isLoading = false
-            return
-        }
-        
-        var request = URLRequest(url: url)
-        request.httpMethod = "POST"
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        
-        let body: [String: String] = [
-            "username": username
-            // Add any other required fields if needed
-        ]
-        
         do {
-            request.httpBody = try JSONSerialization.data(withJSONObject: body)
-            
-            let (_, response) = try await URLSession.shared.data(for: request)
-            
-            if let httpResponse = response as? HTTPURLResponse, (200...299).contains(httpResponse.statusCode) {
-                successMessage = "User added successfully!"
-                username = "" // Clear the field
-            } else {
-                errorMessage = "Failed to add user"
-            }
+            try await APIClient.shared.addUser(username: username)
+            successMessage = "User added successfully!"
+            username = ""
         } catch {
-            errorMessage = "Error: \(error.localizedDescription)"
+            errorMessage = error.localizedDescription
         }
         
         isLoading = false

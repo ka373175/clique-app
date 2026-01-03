@@ -1,5 +1,5 @@
 //
-//  FullStatus.swift
+//  Status.swift
 //  clique
 //
 //  Created by Praveen Kumar on 8/13/25.

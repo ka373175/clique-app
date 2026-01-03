@@ -1,5 +1,5 @@
 //
-//  FullStatusRow.swift
+//  StatusRowView.swift
 //  clique
 //
 //  Created by Praveen Kumar on 8/19/25.
@@ -7,8 +7,8 @@
 
 import SwiftUI
 
-struct FullStatusRow: View {
-    var fullStatus: FullStatus
+struct StatusRowView: View {
+    var status: FullStatus
     
     var body: some View {
         HStack(alignment: .top, spacing: 12) {
@@ -19,11 +19,11 @@ struct FullStatusRow: View {
                     .fill(Color.black)
                     .frame(width: 50, height: 50)
                 // Initials
-                Text("\(fullStatus.firstName.prefix(1))\(fullStatus.lastName.prefix(1))")
+                Text("\(status.firstName.prefix(1))\(status.lastName.prefix(1))")
                     .foregroundColor(.white)
                     .font(.system(size: 20, weight: .bold))
                 // Status emoji
-                Text(fullStatus.statusEmoji ?? "")
+                Text(status.statusEmoji ?? "")
                     .font(.system(size: 14)) // Smaller size for emoji
                     .offset(x: 16, y: 15) // Adjust offset for bottom-right positioning
             }
@@ -32,12 +32,12 @@ struct FullStatusRow: View {
             VStack(alignment: .leading, spacing: 4) {
                 // HStack: Name
                 HStack {
-                    Text("\(fullStatus.firstName) \(fullStatus.lastName)")
+                    Text("\(status.firstName) \(status.lastName)")
                         .font(.system(size: 20))
                         .lineLimit(1)
                 }
                 // Status text
-                Text(fullStatus.statusText)
+                Text(status.statusText)
                     .font(.system(size: 15))
                     .foregroundColor(.secondary)
             }
@@ -50,5 +50,5 @@ struct FullStatusRow: View {
 }
 
 #Preview {
-    FullStatusRow(fullStatus: fullStatusesForTesting[0])
+    StatusRowView(status: statusesForTesting[0])
 }
