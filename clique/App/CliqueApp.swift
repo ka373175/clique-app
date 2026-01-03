@@ -9,9 +9,15 @@ import SwiftUI
 
 @main
 struct CliqueApp: App {
+    @StateObject private var authService = AuthService.shared
+    
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            if authService.isLoggedIn {
+                ContentView()
+            } else {
+                AuthView()
+            }
         }
     }
 }

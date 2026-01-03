@@ -28,6 +28,11 @@ struct ContentView: View {
                 .tabItem {
                     Label("Add User", systemImage: "person.badge.plus")
                 }
+            
+            SettingsView()
+                .tabItem {
+                    Label("Settings", systemImage: "gear")
+                }
         }
     }
 }

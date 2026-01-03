@@ -8,9 +8,6 @@
 import SwiftUI
 
 struct SetStatusView: View {
-    // TODO: Replace with actual user ID from authentication
-    private let currentUserId = "68b7a91d3074862e161cb776"
-    
     @State private var statusEmoji: String = ""
     @State private var statusText: String = ""
     @State private var isLoading: Bool = false
@@ -59,7 +56,6 @@ struct SetStatusView: View {
         
         do {
             try await APIClient.shared.updateStatus(
-                userId: currentUserId,
                 emoji: statusEmoji,
                 text: statusText
             )
