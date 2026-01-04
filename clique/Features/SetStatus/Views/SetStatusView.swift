@@ -24,14 +24,33 @@ struct SetStatusView: View {
                 
                 // Emoji Input
                 VStack(spacing: 8) {
-                    EmojiTextField(text: $statusEmoji, placeholder: "+")
-                        .frame(width: 100, height: 100)
-                        .background(
-                            Circle()
-                                .fill(Color(.systemGray6))
-                        )
+                    ZStack(alignment: .topTrailing) {
+                        EmojiTextField(text: $statusEmoji, placeholder: "+")
+                            .frame(width: 100, height: 100)
+                            .background(
+                                Circle()
+                                    .fill(Color(.systemGray6))
+                            )
+                        
+                        // Clear button - only show when emoji is selected
+                        if !statusEmoji.isEmpty {
+                            Button {
+                                withAnimation(.easeInOut(duration: 0.15)) {
+                                    statusEmoji = ""
+                                }
+                            } label: {
+                                Image(systemName: "xmark.circle.fill")
+                                    .font(.system(size: 28))
+                                    .symbolRenderingMode(.palette)
+                                    .foregroundStyle(.white, Color(.systemGray3))
+                            }
+                            .offset(x: 4, y: -4)
+                            .transition(.scale.combined(with: .opacity))
+                        }
+                    }
+                    .animation(.easeInOut(duration: 0.15), value: statusEmoji.isEmpty)
                     
-                    Text("Tap to add emoji")
+                    Text(statusEmoji.isEmpty ? "Tap to add emoji" : "Tap to change")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
