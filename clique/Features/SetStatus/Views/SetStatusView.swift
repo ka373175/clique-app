@@ -15,6 +15,7 @@ struct SetStatusView: View {
     @State private var errorMessage: String?
     @State private var showSuccess: Bool = false
     @State private var hasPrefilled: Bool = false
+    @FocusState private var isTextEditorFocused: Bool
     
     var body: some View {
         NavigationStack {
@@ -36,15 +37,32 @@ struct SetStatusView: View {
                 }
                 
                 // Status Text Input
-                TextField("What's on your mind?", text: $statusText)
-                    .font(.title3)
-                    .multilineTextAlignment(.center)
-                    .padding()
-                    .background(
-                        RoundedRectangle(cornerRadius: 12)
-                            .fill(Color(.systemGray6))
-                    )
-                    .padding(.horizontal, 24)
+                ZStack(alignment: .top) {
+                    // Placeholder
+                    if statusText.isEmpty {
+                        Text("What's on your mind?")
+                            .font(.title3)
+                            .foregroundStyle(.secondary)
+                            .padding(.top, 16)
+                    }
+                    
+                    // Expanding TextEditor
+                    TextEditor(text: $statusText)
+                        .font(.title3)
+                        .multilineTextAlignment(.center)
+                        .scrollContentBackground(.hidden)
+                        .frame(minHeight: 60)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 8)
+                        .focused($isTextEditorFocused)
+                }
+                .padding()
+                .background(
+                    RoundedRectangle(cornerRadius: 12)
+                        .fill(Color(.systemGray6))
+                )
+                .padding(.horizontal, 24)
                 
                 Spacer()
                 
@@ -89,10 +107,24 @@ struct SetStatusView: View {
                 .padding(.bottom, 24)
                 .contentShape(Capsule())
             }
+            .contentShape(Rectangle())
+            .onTapGesture {
+                isTextEditorFocused = false
+            }
             .navigationTitle("Set Status")
             .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    if isTextEditorFocused {
+                        Button("Done") {
+                            isTextEditorFocused = false
+                        }
+                    }
+                }
+            }
             .animation(.easeInOut(duration: 0.2), value: errorMessage)
             .animation(.easeInOut(duration: 0.2), value: showSuccess)
+            .animation(.easeInOut(duration: 0.2), value: isTextEditorFocused)
             .onAppear {
                 prefillCurrentStatus()
             }
