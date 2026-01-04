@@ -87,6 +87,34 @@ actor APIClient {
         return try JSONDecoder().decode(AuthResponse.self, from: data)
     }
     
+    /// Refreshes the current JWT token, returning a new token if still valid
+    func refreshToken(currentToken: String) async throws -> AuthResponse {
+        guard let url = URL(string: APIEndpoints.refreshToken) else {
+            throw APIError.invalidURL
+        }
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.setValue("Bearer \(currentToken)", forHTTPHeaderField: "Authorization")
+        
+        let (data, response) = try await URLSession.shared.data(for: request)
+        
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw APIError.invalidResponse
+        }
+        
+        if httpResponse.statusCode == 401 {
+            throw APIError.unauthorized
+        }
+        
+        guard (200...299).contains(httpResponse.statusCode) else {
+            throw APIError.requestFailed
+        }
+        
+        return try JSONDecoder().decode(AuthResponse.self, from: data)
+    }
+    
     // MARK: - Statuses
     
     /// Fetches all statuses from the API (requires authentication)

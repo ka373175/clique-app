@@ -130,17 +130,8 @@ struct AuthView: View {
     
     private var isFormValid: Bool {
         if isLoginMode {
-            print("login")
-            print(username)
-            print(password)
             return !username.isEmpty && !password.isEmpty
         } else {
-            print("signup")
-            print(username)
-            print(password)
-            print(firstName)
-            print(lastName)
-            print(confirmPassword)
             return !username.isEmpty && 
                    !password.isEmpty && 
                    !firstName.isEmpty && 
@@ -153,7 +144,6 @@ struct AuthView: View {
     private func submit() async {
         isLoading = true
         errorMessage = nil
-        print("yes")
         
         do {
             if isLoginMode {

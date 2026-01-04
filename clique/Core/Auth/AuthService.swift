@@ -67,6 +67,27 @@ class AuthService: ObservableObject {
         self.isLoggedIn = false
     }
     
+    /// Refreshes the token if one exists. If refresh fails, logs out the user.
+    /// Call this on app launch to ensure rolling session persistence.
+    func refreshTokenIfNeeded() async {
+        guard let token = getTokenFromKeychain(), !token.isEmpty else {
+            // No token stored, nothing to refresh
+            return
+        }
+        
+        do {
+            let response = try await APIClient.shared.refreshToken(currentToken: token)
+            try saveCredentials(token: response.token, user: response.user)
+            self.currentUser = response.user
+            self.isLoggedIn = true
+            print("Token refreshed successfully")
+        } catch {
+            // Token is invalid or expired - log out the user
+            print("Token refresh failed: \(error.localizedDescription). Logging out.")
+            logout()
+        }
+    }
+    
     // MARK: - Private Methods
     
     private func loadStoredCredentials() {

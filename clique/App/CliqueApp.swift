@@ -13,10 +13,15 @@ struct CliqueApp: App {
     
     var body: some Scene {
         WindowGroup {
-            if authService.isLoggedIn {
-                ContentView()
-            } else {
-                AuthView()
+            Group {
+                if authService.isLoggedIn {
+                    ContentView()
+                } else {
+                    AuthView()
+                }
+            }
+            .task {
+                await authService.refreshTokenIfNeeded()
             }
         }
     }
