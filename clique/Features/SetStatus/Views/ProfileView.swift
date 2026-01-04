@@ -141,19 +141,40 @@ struct ProfileView: View {
                                 .tint(.white)
                         } else {
                             Text("Update Status")
+                                .font(.headline)
                                 .fontWeight(.semibold)
                         }
                     }
                     .frame(maxWidth: .infinity)
-                    .frame(height: 50)
-                    .background(statusText.isEmpty ? Color.gray : Color.black)
+                    .frame(height: 56)
+                    .background(
+                        Group {
+                            if statusText.isEmpty {
+                                Color.gray.opacity(0.5)
+                            } else {
+                                LinearGradient(
+                                    colors: [Color.blue, Color.blue.opacity(0.8)],
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing
+                                )
+                            }
+                        }
+                    )
                     .foregroundStyle(.white)
-                    .clipShape(Capsule())
+                    .clipShape(RoundedRectangle(cornerRadius: 16))
+                    .shadow(
+                        color: statusText.isEmpty ? .clear : .blue.opacity(0.3),
+                        radius: 8,
+                        y: 4
+                    )
                 }
                 .disabled(statusText.isEmpty || isLoading)
+                .opacity(statusText.isEmpty ? 0.6 : 1.0)
+                .scaleEffect(statusText.isEmpty ? 0.98 : 1.0)
+                .animation(.easeInOut(duration: 0.2), value: statusText.isEmpty)
                 .padding(.horizontal, 24)
                 .padding(.bottom, 24)
-                .contentShape(Capsule())
+                .contentShape(RoundedRectangle(cornerRadius: 16))
             }
             .contentShape(Rectangle())
             .onTapGesture {

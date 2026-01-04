@@ -15,18 +15,6 @@ struct SettingsView: View {
         NavigationStack {
             List {
                 
-                // Actions Section
-                Section {
-                    Button(role: .destructive) {
-                        showingLogoutAlert = true
-                    } label: {
-                        HStack {
-                            Image(systemName: "rectangle.portrait.and.arrow.right")
-                            Text("Log Out")
-                        }
-                    }
-                }
-                
                 // App Info Section
                 Section {
                     HStack {
@@ -37,6 +25,18 @@ struct SettingsView: View {
                     }
                 } header: {
                     Text("About")
+                }
+                
+                // Actions Section
+                Section {
+                    Button(role: .destructive) {
+                        showingLogoutAlert = true
+                    } label: {
+                        HStack {
+                            Image(systemName: "rectangle.portrait.and.arrow.right")
+                            Text("Log Out")
+                        }
+                    }
                 }
             }
             .navigationTitle("Settings")
