@@ -20,5 +20,9 @@ enum APIEndpoints {
     static var updateStatus: String {
         return "\(baseURL)/update-status"
     }
+    
+    static let friends = "\(baseURL)/friends"
+    static let addFriend = "\(baseURL)/add-friend"
+    static let removeFriend = "\(baseURL)/remove-friend"
 }
 
