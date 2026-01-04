@@ -18,6 +18,7 @@ struct ProfileView: View {
     @State private var hasPrefilled: Bool = false
     @State private var successDismissTask: Task<Void, Never>?
     @FocusState private var isTextEditorFocused: Bool
+    @State private var isEmojiFieldFocused: Bool = false
     
     // MARK: - Computed Properties
     
@@ -65,7 +66,7 @@ struct ProfileView: View {
                 // Emoji Input
                 VStack(spacing: 8) {
                     ZStack(alignment: .topTrailing) {
-                        EmojiTextField(text: $statusEmoji, placeholder: "+")
+                        EmojiTextField(text: $statusEmoji, isFocused: $isEmojiFieldFocused, placeholder: "+")
                             .frame(width: 100, height: 100)
                             .background(
                                 Circle()
@@ -186,13 +187,15 @@ struct ProfileView: View {
             .contentShape(Rectangle())
             .onTapGesture {
                 isTextEditorFocused = false
+                isEmojiFieldFocused = false
             }
             .navigationTitle("Profile")
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
-                    if isTextEditorFocused {
+                    if isTextEditorFocused || isEmojiFieldFocused {
                         Button("Done") {
                             isTextEditorFocused = false
+                            isEmojiFieldFocused = false
                         }
                     }
                 }

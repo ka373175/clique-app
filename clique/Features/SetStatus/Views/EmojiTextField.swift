@@ -11,6 +11,7 @@ import UIKit
 
 struct EmojiTextField: UIViewRepresentable {
     @Binding var text: String
+    @Binding var isFocused: Bool
     var placeholder: String = "+"
     
     func makeUIView(context: Context) -> EmojiUITextField {
@@ -31,11 +32,23 @@ struct EmojiTextField: UIViewRepresentable {
             ]
         )
         
+        // Store reference for focus control
+        context.coordinator.textField = textField
+        
         return textField
     }
     
     func updateUIView(_ uiView: EmojiUITextField, context: Context) {
         uiView.text = text
+        
+        // Handle focus state changes from SwiftUI
+        DispatchQueue.main.async {
+            if isFocused && !uiView.isFirstResponder {
+                uiView.becomeFirstResponder()
+            } else if !isFocused && uiView.isFirstResponder {
+                uiView.resignFirstResponder()
+            }
+        }
     }
     
     func makeCoordinator() -> Coordinator {
@@ -44,6 +57,7 @@ struct EmojiTextField: UIViewRepresentable {
     
     class Coordinator: NSObject, UITextFieldDelegate {
         var parent: EmojiTextField
+        weak var textField: UITextField?
         
         init(_ parent: EmojiTextField) {
             self.parent = parent
@@ -73,6 +87,14 @@ struct EmojiTextField: UIViewRepresentable {
             textField.resignFirstResponder()
             return true
         }
+        
+        func textFieldDidBeginEditing(_ textField: UITextField) {
+            parent.isFocused = true
+        }
+        
+        func textFieldDidEndEditing(_ textField: UITextField) {
+            parent.isFocused = false
+        }
     }
 }
 
@@ -100,10 +122,11 @@ extension String {
 #Preview {
     struct PreviewWrapper: View {
         @State private var emoji = ""
+        @State private var isFocused = false
         
         var body: some View {
             VStack {
-                EmojiTextField(text: $emoji)
+                EmojiTextField(text: $emoji, isFocused: $isFocused)
                     .frame(width: 100, height: 100)
                     .background(Circle().fill(Color(.systemGray6)))
                 
