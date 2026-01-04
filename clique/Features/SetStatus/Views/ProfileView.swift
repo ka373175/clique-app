@@ -16,7 +16,18 @@ struct ProfileView: View {
     @State private var errorMessage: String?
     @State private var showSuccess: Bool = false
     @State private var hasPrefilled: Bool = false
+    @State private var successDismissTask: Task<Void, Never>?
     @FocusState private var isTextEditorFocused: Bool
+    
+    // MARK: - Computed Properties
+    
+    private var canUpdateStatus: Bool {
+        !statusText.isEmpty && !isLoading
+    }
+    
+    private func userInitials(for user: User) -> String {
+        String(user.firstName.prefix(1)).uppercased() + String(user.lastName.prefix(1)).uppercased()
+    }
     
     var body: some View {
         NavigationStack {
@@ -29,7 +40,7 @@ struct ProfileView: View {
                             .fill(Color.blue.gradient)
                             .frame(width: 80, height: 80)
                             .overlay {
-                                Text(user.firstName.prefix(1).uppercased() + user.lastName.prefix(1).uppercased())
+                                Text(userInitials(for: user))
                                     .font(.title)
                                     .fontWeight(.semibold)
                                     .foregroundStyle(.white)
@@ -148,30 +159,26 @@ struct ProfileView: View {
                     .frame(maxWidth: .infinity)
                     .frame(height: 56)
                     .background(
-                        Group {
-                            if statusText.isEmpty {
-                                Color.gray.opacity(0.5)
-                            } else {
-                                LinearGradient(
-                                    colors: [Color.blue, Color.blue.opacity(0.8)],
-                                    startPoint: .topLeading,
-                                    endPoint: .bottomTrailing
-                                )
-                            }
-                        }
+                        canUpdateStatus
+                            ? AnyShapeStyle(LinearGradient(
+                                colors: [Color.blue, Color.blue.opacity(0.8)],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            ))
+                            : AnyShapeStyle(Color.gray.opacity(0.5))
                     )
                     .foregroundStyle(.white)
                     .clipShape(RoundedRectangle(cornerRadius: 16))
                     .shadow(
-                        color: statusText.isEmpty ? .clear : .blue.opacity(0.3),
+                        color: canUpdateStatus ? .blue.opacity(0.3) : .clear,
                         radius: 8,
                         y: 4
                     )
                 }
-                .disabled(statusText.isEmpty || isLoading)
-                .opacity(statusText.isEmpty ? 0.6 : 1.0)
-                .scaleEffect(statusText.isEmpty ? 0.98 : 1.0)
-                .animation(.easeInOut(duration: 0.2), value: statusText.isEmpty)
+                .disabled(!canUpdateStatus)
+                .opacity(canUpdateStatus ? 1.0 : 0.6)
+                .scaleEffect(canUpdateStatus ? 1.0 : 0.98)
+                .animation(.easeInOut(duration: 0.2), value: canUpdateStatus)
                 .padding(.horizontal, 24)
                 .padding(.bottom, 24)
                 .contentShape(RoundedRectangle(cornerRadius: 16))
@@ -193,23 +200,30 @@ struct ProfileView: View {
             .animation(.easeInOut(duration: 0.2), value: errorMessage)
             .animation(.easeInOut(duration: 0.2), value: showSuccess)
             .animation(.easeInOut(duration: 0.2), value: isTextEditorFocused)
-            .onAppear {
+            .onChange(of: viewModel.currentUserStatus) { _, _ in
                 prefillCurrentStatus()
+            }
+            .task {
+                // Fetch statuses if not already loaded (handles direct navigation to ProfileView)
+                if viewModel.currentUserStatus == nil && !viewModel.isLoading {
+                    await viewModel.fetchStatuses()
+                }
+                prefillCurrentStatus()
+            }
+            .onDisappear {
+                successDismissTask?.cancel()
             }
         }
     }
     
+    // MARK: - Private Methods
+    
     private func prefillCurrentStatus() {
-        // Only prefill once to avoid overwriting user input
-        guard !hasPrefilled else { return }
+        guard !hasPrefilled, let currentStatus = viewModel.currentUserStatus else { return }
         hasPrefilled = true
-        
-        if let currentStatus = viewModel.currentUserStatus {
-            statusEmoji = currentStatus.statusEmoji ?? ""
-            statusText = currentStatus.statusText
-        }
+        statusEmoji = currentStatus.statusEmoji ?? ""
+        statusText = currentStatus.statusText
     }
-
     
     private func updateStatus() async {
         isLoading = true
@@ -223,9 +237,11 @@ struct ProfileView: View {
             )
             showSuccess = true
             
-            // Auto-hide success message after 2 seconds
-            Task {
+            // Auto-hide success message after 2 seconds (cancel any existing task first)
+            successDismissTask?.cancel()
+            successDismissTask = Task {
                 try? await Task.sleep(for: .seconds(2))
+                guard !Task.isCancelled else { return }
                 showSuccess = false
             }
         } catch {
@@ -240,4 +256,3 @@ struct ProfileView: View {
     ProfileView()
         .environmentObject(StatusViewModel())
 }
-

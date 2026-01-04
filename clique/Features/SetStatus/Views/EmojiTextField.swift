@@ -78,14 +78,13 @@ struct EmojiTextField: UIViewRepresentable {
 
 // MARK: - Custom UITextField that defaults to Emoji Keyboard
 class EmojiUITextField: UITextField {
+    // Cache the emoji input mode to avoid repeated lookups
+    private static var cachedEmojiInputMode: UITextInputMode? = {
+        UITextInputMode.activeInputModes.first { $0.primaryLanguage == "emoji" }
+    }()
+    
     override var textInputMode: UITextInputMode? {
-        // Find and return the emoji input mode
-        for mode in UITextInputMode.activeInputModes {
-            if mode.primaryLanguage == "emoji" {
-                return mode
-            }
-        }
-        return super.textInputMode
+        Self.cachedEmojiInputMode ?? super.textInputMode
     }
 }
 
