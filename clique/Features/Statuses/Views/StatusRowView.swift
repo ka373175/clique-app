@@ -19,7 +19,7 @@ struct StatusRowView: View {
                     .fill(Color.black)
                     .frame(width: 50, height: 50)
                 // Initials
-                Text("\(status.firstName.prefix(1))\(status.lastName.prefix(1))")
+                Text(status.initials)
                     .foregroundColor(.white)
                     .font(.system(size: 20, weight: .bold))
                 // Status emoji

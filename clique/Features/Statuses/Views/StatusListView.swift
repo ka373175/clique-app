@@ -30,9 +30,9 @@ struct StatusListView: View {
                 }
             }
         }
-        .onAppear {
+        .task {
             if viewModel.statuses.isEmpty {
-                Task { await viewModel.fetchStatuses() }
+                await viewModel.fetchStatuses()
             }
         }
         .onChange(of: viewModel.errorMessage) { _, newValue in

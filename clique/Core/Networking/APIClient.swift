@@ -11,6 +11,10 @@ import Foundation
 actor APIClient {
     static let shared = APIClient()
     
+    // MARK: - Shared Coders (avoid repeated allocation)
+    private let jsonEncoder = JSONEncoder()
+    private let jsonDecoder = JSONDecoder()
+    
     private init() {}
     
     // MARK: - Authentication
@@ -25,15 +29,10 @@ actor APIClient {
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         
-        let body: [String: Any] = [
-            "username": username,
-            "password": password
-        ]
-        request.httpBody = try JSONSerialization.data(withJSONObject: body)
+        let body = LoginRequest(username: username, password: password)
+        request.httpBody = try jsonEncoder.encode(body)
         
         let (data, response) = try await URLSession.shared.data(for: request)
-        print(data)
-        print(response)
         
         guard let httpResponse = response as? HTTPURLResponse else {
             throw APIError.invalidResponse
@@ -47,7 +46,7 @@ actor APIClient {
             throw APIError.requestFailed
         }
         
-        return try JSONDecoder().decode(AuthResponse.self, from: data)
+        return try jsonDecoder.decode(AuthResponse.self, from: data)
     }
     
     /// Signs up a new user
@@ -60,17 +59,10 @@ actor APIClient {
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         
-        let body: [String: Any] = [
-            "username": username,
-            "password": password,
-            "firstName": firstName,
-            "lastName": lastName
-        ]
-        request.httpBody = try JSONSerialization.data(withJSONObject: body)
+        let body = SignupRequest(username: username, password: password, firstName: firstName, lastName: lastName)
+        request.httpBody = try jsonEncoder.encode(body)
         
         let (data, response) = try await URLSession.shared.data(for: request)
-        print(data)
-        print(response)
         
         guard let httpResponse = response as? HTTPURLResponse else {
             throw APIError.invalidResponse
@@ -84,7 +76,7 @@ actor APIClient {
             throw APIError.requestFailed
         }
         
-        return try JSONDecoder().decode(AuthResponse.self, from: data)
+        return try jsonDecoder.decode(AuthResponse.self, from: data)
     }
     
     /// Refreshes the current JWT token, returning a new token if still valid
@@ -112,7 +104,7 @@ actor APIClient {
             throw APIError.requestFailed
         }
         
-        return try JSONDecoder().decode(AuthResponse.self, from: data)
+        return try jsonDecoder.decode(AuthResponse.self, from: data)
     }
     
     // MARK: - Statuses
@@ -140,7 +132,7 @@ actor APIClient {
             throw APIError.invalidResponse
         }
         
-        return try JSONDecoder().decode([FullStatus].self, from: data)
+        return try jsonDecoder.decode([FullStatus].self, from: data)
     }
     
     /// Adds a new user with the given username
@@ -154,11 +146,10 @@ actor APIClient {
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         try await addAuthHeader(to: &request)
         
-        let body = ["username": username]
-        request.httpBody = try JSONSerialization.data(withJSONObject: body)
+        let body = AddUserRequest(username: username)
+        request.httpBody = try jsonEncoder.encode(body)
         
         let (_, response) = try await URLSession.shared.data(for: request)
-        print(response)
         
         guard let httpResponse = response as? HTTPURLResponse,
               (200...299).contains(httpResponse.statusCode) else {
@@ -177,11 +168,8 @@ actor APIClient {
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         try await addAuthHeader(to: &request)
         
-        let body: [String: Any] = [
-            "statusEmoji": emoji,
-            "statusText": text
-        ]
-        request.httpBody = try JSONSerialization.data(withJSONObject: body)
+        let body = UpdateStatusRequest(statusEmoji: emoji, statusText: text)
+        request.httpBody = try jsonEncoder.encode(body)
         
         let (_, response) = try await URLSession.shared.data(for: request)
         
@@ -234,4 +222,27 @@ enum APIError: LocalizedError {
             return "Please log in to continue"
         }
     }
+}
+
+// MARK: - Request Body Types
+
+private struct LoginRequest: Encodable {
+    let username: String
+    let password: String
+}
+
+private struct SignupRequest: Encodable {
+    let username: String
+    let password: String
+    let firstName: String
+    let lastName: String
+}
+
+private struct AddUserRequest: Encodable {
+    let username: String
+}
+
+private struct UpdateStatusRequest: Encodable {
+    let statusEmoji: String
+    let statusText: String
 }

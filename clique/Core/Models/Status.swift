@@ -38,6 +38,11 @@ struct FullStatus: Codable, Hashable, Identifiable {
      */
     let lastName: String
     
+    /// Computed initials for efficient display in views
+    var initials: String {
+        "\(firstName.prefix(1))\(lastName.prefix(1))"
+    }
+    
     enum CodingKeys: String, CodingKey {
         case id = "_id"
         case statusText

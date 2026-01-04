@@ -19,6 +19,9 @@ class AuthService: ObservableObject {
     @Published private(set) var currentUser: User?
     @Published private(set) var isLoggedIn: Bool = false
     
+    /// In-memory cached token to avoid repeated Keychain reads
+    private var cachedToken: String?
+    
     private init() {
         loadStoredCredentials()
     }
@@ -28,9 +31,12 @@ class AuthService: ObservableObject {
         currentUser?.id
     }
     
-    /// The stored JWT token
+    /// The stored JWT token (uses in-memory cache)
     var token: String? {
-        getTokenFromKeychain()
+        if cachedToken == nil {
+            cachedToken = getTokenFromKeychain()
+        }
+        return cachedToken
     }
     
     // MARK: - Public Methods
@@ -107,13 +113,16 @@ class AuthService: ObservableObject {
     
     private func saveCredentials(token: String, user: User) throws {
         try saveTokenToKeychain(token)
+        cachedToken = token  // Update cache
         saveUserToDefaults(user)
     }
     
     // MARK: - Keychain Operations
     
     private func saveTokenToKeychain(_ token: String) throws {
-        let data = token.data(using: .utf8)!
+        guard let data = token.data(using: .utf8) else {
+            throw AuthError.keychainError
+        }
         
         // Delete any existing token first
         deleteTokenFromKeychain()
@@ -152,6 +161,7 @@ class AuthService: ObservableObject {
     }
     
     private func deleteTokenFromKeychain() {
+        cachedToken = nil  // Invalidate cache
         let query: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
             kSecAttrAccount as String: tokenKey

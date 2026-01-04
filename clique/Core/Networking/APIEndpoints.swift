@@ -17,10 +17,6 @@ enum APIEndpoints {
     static let signup = "\(baseURL)/signup"
     static let refreshToken = "\(baseURL)/refresh-token"
     
-    static func updateStatus(userId: String) -> String {
-        return "\(baseURL)/update-status/\(userId)"
-    }
-    
     static var updateStatus: String {
         return "\(baseURL)/update-status"
     }

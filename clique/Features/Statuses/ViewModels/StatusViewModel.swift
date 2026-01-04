@@ -16,13 +16,12 @@ class StatusViewModel: ObservableObject {
     func fetchStatuses() async {
         isLoading = true
         errorMessage = nil
+        defer { isLoading = false }
         
         do {
             statuses = try await APIClient.shared.fetchStatuses()
         } catch {
             errorMessage = error.localizedDescription
         }
-        
-        isLoading = false
     }
 }
