@@ -81,7 +81,7 @@ struct FriendsView: View {
             Image(systemName: "plus")
                 .fontWeight(.semibold)
         }
-        .glassEffect(.regular.interactive())
+        .buttonStyle(.borderless)
     }
     
     @ViewBuilder
