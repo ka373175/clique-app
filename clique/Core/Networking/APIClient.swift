@@ -20,7 +20,6 @@ actor APIClient {
         guard let url = URL(string: APIEndpoints.login) else {
             throw APIError.invalidURL
         }
-        print("hello")
         
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
