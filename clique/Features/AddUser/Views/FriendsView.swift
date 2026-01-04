@@ -1,5 +1,5 @@
 //
-//  AddUserView.swift
+//  FriendsView.swift
 //  clique
 //
 //  Created by Praveen Kumar on 9/15/25.
@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-struct AddUserView: View {
+struct FriendsView: View {
     @StateObject private var viewModel = FriendsViewModel()
     @State private var showingAddSheet = false
     @State private var friendToDelete: Friend?
@@ -137,14 +137,14 @@ private struct FriendRowView: View {
     private var initialsCircle: some View {
         ZStack {
             Circle()
-                .fill(
-                    LinearGradient(
-                        colors: [.blue.opacity(0.7), .purple.opacity(0.7)],
-                        startPoint: .topLeading,
-                        endPoint: .bottomTrailing
-                    )
+            .fill(
+                LinearGradient(
+                    colors: [.blue.opacity(0.7), .purple.opacity(0.7)],
+                    startPoint: .topLeading,
+                    endPoint: .bottomTrailing
                 )
-                .frame(width: 44, height: 44)
+            )
+            .frame(width: 44, height: 44)
             
             Text(friend.initials)
                 .font(.headline)
@@ -254,5 +254,5 @@ private struct AddFriendSheet: View {
 }
 
 #Preview {
-    AddUserView()
+    FriendsView()
 }

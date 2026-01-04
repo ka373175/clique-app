@@ -21,7 +21,7 @@ struct ContentView: View {
                 Label("Statuses", systemImage: "list.bullet")
             }
             
-            AddUserView()
+            FriendsView()
                 .tabItem {
                     Label("Friends", systemImage: "person.2")
                 }
