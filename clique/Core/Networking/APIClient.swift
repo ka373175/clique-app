@@ -13,16 +13,130 @@ actor APIClient {
     
     private init() {}
     
-    /// Fetches all statuses from the API
+    // MARK: - Authentication
+    
+    /// Logs in a user with the given credentials
+    func login(username: String, password: String) async throws -> AuthResponse {
+        guard let url = URL(string: APIEndpoints.login) else {
+            throw APIError.invalidURL
+        }
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        
+        let body: [String: Any] = [
+            "username": username,
+            "password": password
+        ]
+        request.httpBody = try JSONSerialization.data(withJSONObject: body)
+        
+        let (data, response) = try await URLSession.shared.data(for: request)
+        print(data)
+        print(response)
+        
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw APIError.invalidResponse
+        }
+        
+        if httpResponse.statusCode == 401 {
+            throw APIError.invalidCredentials
+        }
+        
+        guard (200...299).contains(httpResponse.statusCode) else {
+            throw APIError.requestFailed
+        }
+        
+        return try JSONDecoder().decode(AuthResponse.self, from: data)
+    }
+    
+    /// Signs up a new user
+    func signup(username: String, password: String, firstName: String, lastName: String) async throws -> AuthResponse {
+        guard let url = URL(string: APIEndpoints.signup) else {
+            throw APIError.invalidURL
+        }
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        
+        let body: [String: Any] = [
+            "username": username,
+            "password": password,
+            "firstName": firstName,
+            "lastName": lastName
+        ]
+        request.httpBody = try JSONSerialization.data(withJSONObject: body)
+        
+        let (data, response) = try await URLSession.shared.data(for: request)
+        print(data)
+        print(response)
+        
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw APIError.invalidResponse
+        }
+        
+        if httpResponse.statusCode == 409 {
+            throw APIError.usernameExists
+        }
+        
+        guard (200...299).contains(httpResponse.statusCode) else {
+            throw APIError.requestFailed
+        }
+        
+        return try JSONDecoder().decode(AuthResponse.self, from: data)
+    }
+    
+    /// Refreshes the current JWT token, returning a new token if still valid
+    func refreshToken(currentToken: String) async throws -> AuthResponse {
+        guard let url = URL(string: APIEndpoints.refreshToken) else {
+            throw APIError.invalidURL
+        }
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.setValue("Bearer \(currentToken)", forHTTPHeaderField: "Authorization")
+        
+        let (data, response) = try await URLSession.shared.data(for: request)
+        
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw APIError.invalidResponse
+        }
+        
+        if httpResponse.statusCode == 401 {
+            throw APIError.unauthorized
+        }
+        
+        guard (200...299).contains(httpResponse.statusCode) else {
+            throw APIError.requestFailed
+        }
+        
+        return try JSONDecoder().decode(AuthResponse.self, from: data)
+    }
+    
+    // MARK: - Statuses
+    
+    /// Fetches all statuses from the API (requires authentication)
     func fetchStatuses() async throws -> [FullStatus] {
         guard let url = URL(string: APIEndpoints.statuses) else {
             throw APIError.invalidURL
         }
         
-        let (data, response) = try await URLSession.shared.data(from: url)
+        var request = URLRequest(url: url)
+        try await addAuthHeader(to: &request)
         
-        guard let httpResponse = response as? HTTPURLResponse,
-              (200...299).contains(httpResponse.statusCode) else {
+        let (data, response) = try await URLSession.shared.data(for: request)
+        
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw APIError.invalidResponse
+        }
+        
+        if httpResponse.statusCode == 401 {
+            throw APIError.unauthorized
+        }
+        
+        guard (200...299).contains(httpResponse.statusCode) else {
             throw APIError.invalidResponse
         }
         
@@ -38,6 +152,7 @@ actor APIClient {
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        try await addAuthHeader(to: &request)
         
         let body = ["username": username]
         request.httpBody = try JSONSerialization.data(withJSONObject: body)
@@ -50,15 +165,16 @@ actor APIClient {
         }
     }
     
-    /// Updates the status for a given user
-    func updateStatus(userId: String, emoji: String, text: String) async throws {
-        guard let url = URL(string: APIEndpoints.updateStatus(userId: userId)) else {
+    /// Updates the status for the authenticated user
+    func updateStatus(emoji: String, text: String) async throws {
+        guard let url = URL(string: APIEndpoints.updateStatus) else {
             throw APIError.invalidURL
         }
         
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        try await addAuthHeader(to: &request)
         
         let body: [String: Any] = [
             "statusEmoji": emoji,
@@ -68,10 +184,27 @@ actor APIClient {
         
         let (_, response) = try await URLSession.shared.data(for: request)
         
-        guard let httpResponse = response as? HTTPURLResponse,
-              (200...299).contains(httpResponse.statusCode) else {
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw APIError.invalidResponse
+        }
+        
+        if httpResponse.statusCode == 401 {
+            throw APIError.unauthorized
+        }
+        
+        guard (200...299).contains(httpResponse.statusCode) else {
             throw APIError.requestFailed
         }
+    }
+    
+    // MARK: - Private Helpers
+    
+    /// Adds the Authorization header with the JWT token
+    private func addAuthHeader(to request: inout URLRequest) async throws {
+        guard let token = await MainActor.run(body: { AuthService.shared.token }) else {
+            throw APIError.unauthorized
+        }
+        request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
     }
 }
 
@@ -80,6 +213,9 @@ enum APIError: LocalizedError {
     case invalidURL
     case invalidResponse
     case requestFailed
+    case invalidCredentials
+    case usernameExists
+    case unauthorized
     
     var errorDescription: String? {
         switch self {
@@ -89,6 +225,12 @@ enum APIError: LocalizedError {
             return "Invalid response from server"
         case .requestFailed:
             return "Request failed"
+        case .invalidCredentials:
+            return "Invalid username or password"
+        case .usernameExists:
+            return "Username already exists"
+        case .unauthorized:
+            return "Please log in to continue"
         }
     }
 }
