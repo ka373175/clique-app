@@ -1,5 +1,5 @@
 //
-//  SetStatusView.swift
+//  ProfileView.swift
 //  clique
 //
 //  Created by Praveen Kumar on 9/15/25.
@@ -7,8 +7,9 @@
 
 import SwiftUI
 
-struct SetStatusView: View {
+struct ProfileView: View {
     @EnvironmentObject var viewModel: StatusViewModel
+    @ObservedObject private var authService = AuthService.shared
     @State private var statusEmoji: String = ""
     @State private var statusText: String = ""
     @State private var isLoading: Bool = false
@@ -19,7 +20,35 @@ struct SetStatusView: View {
     
     var body: some View {
         NavigationStack {
-            VStack(spacing: 32) {
+            VStack(spacing: 24) {
+                // User Profile Section
+                if let user = authService.currentUser {
+                    VStack(spacing: 12) {
+                        // Avatar
+                        Circle()
+                            .fill(Color.blue.gradient)
+                            .frame(width: 80, height: 80)
+                            .overlay {
+                                Text(user.firstName.prefix(1).uppercased() + user.lastName.prefix(1).uppercased())
+                                    .font(.title)
+                                    .fontWeight(.semibold)
+                                    .foregroundStyle(.white)
+                            }
+                        
+                        // User Details
+                        VStack(spacing: 4) {
+                            Text(user.fullName)
+                                .font(.title2)
+                                .fontWeight(.semibold)
+                            
+                            Text("@\(user.username)")
+                                .font(.subheadline)
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+                    .padding(.top, 16)
+                }
+                
                 Spacer()
                 
                 // Emoji Input
@@ -130,7 +159,7 @@ struct SetStatusView: View {
             .onTapGesture {
                 isTextEditorFocused = false
             }
-            .navigationTitle("Set Status")
+            .navigationTitle("Profile")
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
                     if isTextEditorFocused {
@@ -187,7 +216,7 @@ struct SetStatusView: View {
 }
 
 #Preview {
-    SetStatusView()
+    ProfileView()
         .environmentObject(StatusViewModel())
 }
 

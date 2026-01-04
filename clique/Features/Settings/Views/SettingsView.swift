@@ -14,36 +14,6 @@ struct SettingsView: View {
     var body: some View {
         NavigationStack {
             List {
-                // User Info Section
-                Section {
-                    if let user = authService.currentUser {
-                        HStack(spacing: 16) {
-                            // Avatar
-                            Circle()
-                                .fill(Color.blue.gradient)
-                                .frame(width: 60, height: 60)
-                                .overlay {
-                                    Text(user.firstName.prefix(1).uppercased() + user.lastName.prefix(1).uppercased())
-                                        .font(.title2)
-                                        .fontWeight(.semibold)
-                                        .foregroundStyle(.white)
-                                }
-                            
-                            // User Details
-                            VStack(alignment: .leading, spacing: 4) {
-                                Text(user.fullName)
-                                    .font(.headline)
-                                
-                                Text("@\(user.username)")
-                                    .font(.subheadline)
-                                    .foregroundStyle(.secondary)
-                            }
-                        }
-                        .padding(.vertical, 8)
-                    }
-                } header: {
-                    Text("Account")
-                }
                 
                 // Actions Section
                 Section {

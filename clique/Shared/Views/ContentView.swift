@@ -21,14 +21,14 @@ struct ContentView: View {
                 Label("Statuses", systemImage: "list.bullet")
             }
             
-            SetStatusView()
-                .tabItem {
-                    Label("Set Status", systemImage: "pencil")
-                }
-            
             AddUserView()
                 .tabItem {
-                    Label("Add User", systemImage: "person.badge.plus")
+                    Label("Friends", systemImage: "person.2")
+                }
+            
+            ProfileView()
+                .tabItem {
+                    Label("Profile", systemImage: "person")
                 }
             
             SettingsView()
