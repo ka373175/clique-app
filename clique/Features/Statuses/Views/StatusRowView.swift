@@ -37,9 +37,9 @@ struct StatusRowView: View {
                         .lineLimit(1)
                 }
                 // Status text
-                Text(status.statusText)
+                Text(status.statusText.isEmpty ? "No status yet" : status.statusText)
                     .font(.system(size: 15))
-                    .foregroundColor(.secondary)
+                    .foregroundStyle(status.statusText.isEmpty ? .tertiary : .secondary)
             }
             
             Spacer()
