@@ -8,11 +8,13 @@
 import SwiftUI
 
 struct SetStatusView: View {
+    @EnvironmentObject var viewModel: StatusViewModel
     @State private var statusEmoji: String = ""
     @State private var statusText: String = ""
     @State private var isLoading: Bool = false
     @State private var errorMessage: String?
     @State private var showSuccess: Bool = false
+    @State private var hasPrefilled: Bool = false
     
     var body: some View {
         NavigationStack {
@@ -21,9 +23,7 @@ struct SetStatusView: View {
                 
                 // Emoji Input
                 VStack(spacing: 8) {
-                    TextField("😊", text: $statusEmoji)
-                        .font(.system(size: 64))
-                        .multilineTextAlignment(.center)
+                    EmojiTextField(text: $statusEmoji, placeholder: "+")
                         .frame(width: 100, height: 100)
                         .background(
                             Circle()
@@ -93,8 +93,23 @@ struct SetStatusView: View {
             .navigationBarTitleDisplayMode(.inline)
             .animation(.easeInOut(duration: 0.2), value: errorMessage)
             .animation(.easeInOut(duration: 0.2), value: showSuccess)
+            .onAppear {
+                prefillCurrentStatus()
+            }
         }
     }
+    
+    private func prefillCurrentStatus() {
+        // Only prefill once to avoid overwriting user input
+        guard !hasPrefilled else { return }
+        hasPrefilled = true
+        
+        if let currentStatus = viewModel.currentUserStatus {
+            statusEmoji = currentStatus.statusEmoji ?? ""
+            statusText = currentStatus.statusText
+        }
+    }
+
     
     private func updateStatus() async {
         isLoading = true
@@ -123,4 +138,6 @@ struct SetStatusView: View {
 
 #Preview {
     SetStatusView()
+        .environmentObject(StatusViewModel())
 }
+

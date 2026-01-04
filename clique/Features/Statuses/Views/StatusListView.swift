@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct StatusListView: View {
-    @StateObject private var viewModel = StatusViewModel()
+    @EnvironmentObject var viewModel: StatusViewModel
     @State private var errorPresented = false
     
     var body: some View {
@@ -52,4 +52,6 @@ struct StatusListView: View {
 
 #Preview {
     StatusListView()
+        .environmentObject(StatusViewModel())
 }
+

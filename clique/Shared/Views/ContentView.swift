@@ -8,6 +8,8 @@
 import SwiftUI
 
 struct ContentView: View {
+    @StateObject private var statusViewModel = StatusViewModel()
+    
     var body: some View {
         TabView {
             NavigationStack {
@@ -34,9 +36,11 @@ struct ContentView: View {
                     Label("Settings", systemImage: "gear")
                 }
         }
+        .environmentObject(statusViewModel)
     }
 }
 
 #Preview {
     ContentView()
 }
+
