@@ -41,7 +41,7 @@ struct AddUserView: View {
                         .foregroundStyle(.green)
                 }
             }
-            .navigationTitle("Add User by Username")
+            .navigationTitle("Add User")
         }
     }
     
