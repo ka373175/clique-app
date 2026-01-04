@@ -131,7 +131,6 @@ struct SetStatusView: View {
                 isTextEditorFocused = false
             }
             .navigationTitle("Set Status")
-            .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
                     if isTextEditorFocused {
