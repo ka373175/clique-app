@@ -104,10 +104,8 @@ struct FriendsView: View {
         }
         Button("Remove", role: .destructive) {
             if let friend = friendToDelete {
-                Task {
-                    _ = await viewModel.removeFriend(friend)
-                    friendToDelete = nil
-                }
+                viewModel.removeFriendOptimistically(friend)
+                friendToDelete = nil
             }
         }
     }

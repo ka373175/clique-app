@@ -55,4 +55,25 @@ class FriendsViewModel: ObservableObject {
             return false
         }
     }
+    
+    /// Removes a friend optimistically (fire-and-forget)
+    /// Immediately removes from UI and fires API call in background
+    func removeFriendOptimistically(_ friend: Friend) {
+        // Store the original index in case we need to restore
+        guard let index = friends.firstIndex(where: { $0.id == friend.id }) else { return }
+        
+        // Immediately remove from UI for instant feedback
+        friends.remove(at: index)
+        
+        // Fire API call in background
+        Task {
+            do {
+                try await APIClient.shared.removeFriend(friendId: friend.id)
+            } catch {
+                // If API call fails, restore the friend and show error
+                friends.insert(friend, at: min(index, friends.count))
+                errorMessage = "Failed to remove friend: \(error.localizedDescription)"
+            }
+        }
+    }
 }
