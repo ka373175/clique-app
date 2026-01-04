@@ -22,6 +22,12 @@ struct StatusListView: View {
         .overlay {
             if viewModel.isLoading && viewModel.statuses.isEmpty {
                 ProgressView("Loading...")
+            } else if !viewModel.isLoading && viewModel.statuses.isEmpty {
+                ContentUnavailableView {
+                    Label("No Friends Yet", systemImage: "person.2.slash")
+                } description: {
+                    Text("Add some friends to see their statuses here!")
+                }
             }
         }
         .onAppear {

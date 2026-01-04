@@ -158,6 +158,7 @@ actor APIClient {
         request.httpBody = try JSONSerialization.data(withJSONObject: body)
         
         let (_, response) = try await URLSession.shared.data(for: request)
+        print(response)
         
         guard let httpResponse = response as? HTTPURLResponse,
               (200...299).contains(httpResponse.statusCode) else {
