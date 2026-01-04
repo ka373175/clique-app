@@ -8,6 +8,8 @@
 import SwiftUI
 
 struct ContentView: View {
+    @StateObject private var statusViewModel = StatusViewModel()
+    
     var body: some View {
         TabView {
             NavigationStack {
@@ -19,14 +21,14 @@ struct ContentView: View {
                 Label("Statuses", systemImage: "list.bullet")
             }
             
-            SetStatusView()
-                .tabItem {
-                    Label("Set Status", systemImage: "pencil")
-                }
-            
             AddUserView()
                 .tabItem {
-                    Label("Add User", systemImage: "person.badge.plus")
+                    Label("Friends", systemImage: "person.2")
+                }
+            
+            ProfileView()
+                .tabItem {
+                    Label("Profile", systemImage: "person")
                 }
             
             SettingsView()
@@ -34,9 +36,11 @@ struct ContentView: View {
                     Label("Settings", systemImage: "gear")
                 }
         }
+        .environmentObject(statusViewModel)
     }
 }
 
 #Preview {
     ContentView()
 }
+

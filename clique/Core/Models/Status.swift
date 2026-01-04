@@ -38,6 +38,12 @@ struct FullStatus: Codable, Hashable, Identifiable {
      */
     let lastName: String
     
+    /*
+     isCurrentUser: bool
+     Whether this status belongs to the authenticated user
+     */
+    let isCurrentUser: Bool
+    
     /// Computed initials for efficient display in views
     var initials: String {
         "\(firstName.prefix(1))\(lastName.prefix(1))"
@@ -49,5 +55,6 @@ struct FullStatus: Codable, Hashable, Identifiable {
         case statusEmoji
         case firstName
         case lastName
+        case isCurrentUser
     }
 }

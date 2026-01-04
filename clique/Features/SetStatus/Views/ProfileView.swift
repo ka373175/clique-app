@@ -1,0 +1,243 @@
+//
+//  ProfileView.swift
+//  clique
+//
+//  Created by Praveen Kumar on 9/15/25.
+//
+
+import SwiftUI
+
+struct ProfileView: View {
+    @EnvironmentObject var viewModel: StatusViewModel
+    @ObservedObject private var authService = AuthService.shared
+    @State private var statusEmoji: String = ""
+    @State private var statusText: String = ""
+    @State private var isLoading: Bool = false
+    @State private var errorMessage: String?
+    @State private var showSuccess: Bool = false
+    @State private var hasPrefilled: Bool = false
+    @FocusState private var isTextEditorFocused: Bool
+    
+    var body: some View {
+        NavigationStack {
+            VStack(spacing: 24) {
+                // User Profile Section
+                if let user = authService.currentUser {
+                    VStack(spacing: 12) {
+                        // Avatar
+                        Circle()
+                            .fill(Color.blue.gradient)
+                            .frame(width: 80, height: 80)
+                            .overlay {
+                                Text(user.firstName.prefix(1).uppercased() + user.lastName.prefix(1).uppercased())
+                                    .font(.title)
+                                    .fontWeight(.semibold)
+                                    .foregroundStyle(.white)
+                            }
+                        
+                        // User Details
+                        VStack(spacing: 4) {
+                            Text(user.fullName)
+                                .font(.title2)
+                                .fontWeight(.semibold)
+                            
+                            Text("@\(user.username)")
+                                .font(.subheadline)
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+                    .padding(.top, 16)
+                }
+                
+                Spacer()
+                
+                // Emoji Input
+                VStack(spacing: 8) {
+                    ZStack(alignment: .topTrailing) {
+                        EmojiTextField(text: $statusEmoji, placeholder: "+")
+                            .frame(width: 100, height: 100)
+                            .background(
+                                Circle()
+                                    .fill(Color(.systemGray6))
+                            )
+                        
+                        // Clear button - only show when emoji is selected
+                        if !statusEmoji.isEmpty {
+                            Button {
+                                withAnimation(.easeInOut(duration: 0.15)) {
+                                    statusEmoji = ""
+                                }
+                            } label: {
+                                Image(systemName: "xmark.circle.fill")
+                                    .font(.system(size: 28))
+                                    .symbolRenderingMode(.palette)
+                                    .foregroundStyle(.white, Color(.systemGray3))
+                            }
+                            .offset(x: 4, y: -4)
+                            .transition(.scale.combined(with: .opacity))
+                        }
+                    }
+                    .animation(.easeInOut(duration: 0.15), value: statusEmoji.isEmpty)
+                    
+                    Text(statusEmoji.isEmpty ? "Tap to add emoji" : "Tap to change")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+                
+                // Status Text Input
+                ZStack(alignment: .top) {
+                    // Placeholder
+                    if statusText.isEmpty {
+                        Text("What's on your mind?")
+                            .font(.title3)
+                            .foregroundStyle(.secondary)
+                            .padding(.top, 16)
+                    }
+                    
+                    // Expanding TextEditor
+                    TextEditor(text: $statusText)
+                        .font(.title3)
+                        .multilineTextAlignment(.center)
+                        .scrollContentBackground(.hidden)
+                        .frame(minHeight: 60)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 8)
+                        .focused($isTextEditorFocused)
+                }
+                .padding()
+                .background(
+                    RoundedRectangle(cornerRadius: 12)
+                        .fill(Color(.systemGray6))
+                )
+                .padding(.horizontal, 24)
+                
+                Spacer()
+                
+                // Feedback Messages
+                if let error = errorMessage {
+                    Text(error)
+                        .font(.footnote)
+                        .foregroundStyle(.red)
+                        .transition(.opacity)
+                }
+                
+                if showSuccess {
+                    Label("Updated!", systemImage: "checkmark.circle.fill")
+                        .font(.footnote)
+                        .foregroundStyle(.green)
+                        .transition(.opacity)
+                }
+                
+                // Update Button
+                Button {
+                    Task {
+                        await updateStatus()
+                    }
+                } label: {
+                    Group {
+                        if isLoading {
+                            ProgressView()
+                                .tint(.white)
+                        } else {
+                            Text("Update Status")
+                                .font(.headline)
+                                .fontWeight(.semibold)
+                        }
+                    }
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 56)
+                    .background(
+                        Group {
+                            if statusText.isEmpty {
+                                Color.gray.opacity(0.5)
+                            } else {
+                                LinearGradient(
+                                    colors: [Color.blue, Color.blue.opacity(0.8)],
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing
+                                )
+                            }
+                        }
+                    )
+                    .foregroundStyle(.white)
+                    .clipShape(RoundedRectangle(cornerRadius: 16))
+                    .shadow(
+                        color: statusText.isEmpty ? .clear : .blue.opacity(0.3),
+                        radius: 8,
+                        y: 4
+                    )
+                }
+                .disabled(statusText.isEmpty || isLoading)
+                .opacity(statusText.isEmpty ? 0.6 : 1.0)
+                .scaleEffect(statusText.isEmpty ? 0.98 : 1.0)
+                .animation(.easeInOut(duration: 0.2), value: statusText.isEmpty)
+                .padding(.horizontal, 24)
+                .padding(.bottom, 24)
+                .contentShape(RoundedRectangle(cornerRadius: 16))
+            }
+            .contentShape(Rectangle())
+            .onTapGesture {
+                isTextEditorFocused = false
+            }
+            .navigationTitle("Profile")
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    if isTextEditorFocused {
+                        Button("Done") {
+                            isTextEditorFocused = false
+                        }
+                    }
+                }
+            }
+            .animation(.easeInOut(duration: 0.2), value: errorMessage)
+            .animation(.easeInOut(duration: 0.2), value: showSuccess)
+            .animation(.easeInOut(duration: 0.2), value: isTextEditorFocused)
+            .onAppear {
+                prefillCurrentStatus()
+            }
+        }
+    }
+    
+    private func prefillCurrentStatus() {
+        // Only prefill once to avoid overwriting user input
+        guard !hasPrefilled else { return }
+        hasPrefilled = true
+        
+        if let currentStatus = viewModel.currentUserStatus {
+            statusEmoji = currentStatus.statusEmoji ?? ""
+            statusText = currentStatus.statusText
+        }
+    }
+
+    
+    private func updateStatus() async {
+        isLoading = true
+        errorMessage = nil
+        showSuccess = false
+        
+        do {
+            try await APIClient.shared.updateStatus(
+                emoji: statusEmoji,
+                text: statusText
+            )
+            showSuccess = true
+            
+            // Auto-hide success message after 2 seconds
+            Task {
+                try? await Task.sleep(for: .seconds(2))
+                showSuccess = false
+            }
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+        
+        isLoading = false
+    }
+}
+
+#Preview {
+    ProfileView()
+        .environmentObject(StatusViewModel())
+}
+

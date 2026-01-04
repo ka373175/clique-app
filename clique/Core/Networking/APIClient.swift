@@ -172,6 +172,7 @@ actor APIClient {
         request.httpBody = try jsonEncoder.encode(body)
         
         let (_, response) = try await URLSession.shared.data(for: request)
+        print(response)
         
         guard let httpResponse = response as? HTTPURLResponse else {
             throw APIError.invalidResponse

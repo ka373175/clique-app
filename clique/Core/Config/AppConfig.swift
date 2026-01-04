@@ -8,5 +8,5 @@
 import Foundation
 
 struct AppConfig {
-    static let version = "1.0.0"
+    static let version = "0.5.0"
 }
