@@ -9,6 +9,7 @@ import SwiftUI
 
 struct ContentView: View {
     @StateObject private var statusViewModel = StatusViewModel()
+    @StateObject private var friendsViewModel = FriendsViewModel()
     
     var body: some View {
         TabView {
@@ -22,6 +23,7 @@ struct ContentView: View {
             }
             
             FriendsView()
+                .environmentObject(friendsViewModel)
                 .tabItem {
                     Label("Friends", systemImage: "person.2")
                 }

@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct FriendsView: View {
-    @StateObject private var viewModel = FriendsViewModel()
+    @EnvironmentObject var viewModel: FriendsViewModel
     @State private var showingAddSheet = false
     @State private var friendToDelete: Friend?
     @State private var showingDeleteConfirmation = false
@@ -253,4 +253,5 @@ private struct AddFriendSheet: View {
 
 #Preview {
     FriendsView()
+        .environmentObject(FriendsViewModel())
 }
