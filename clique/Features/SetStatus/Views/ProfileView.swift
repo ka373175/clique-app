@@ -19,17 +19,18 @@ struct ProfileView: View {
     @State private var successDismissTask: Task<Void, Never>?
     @FocusState private var isTextEditorFocused: Bool
     @State private var isEmojiFieldFocused: Bool = false
-    
+
     // MARK: - Computed Properties
-    
+
     private var canUpdateStatus: Bool {
         !statusText.isEmpty && !isLoading
     }
-    
+
     private func userInitials(for user: User) -> String {
-        String(user.firstName.prefix(1)).uppercased() + String(user.lastName.prefix(1)).uppercased()
+        String(user.firstName.prefix(1)).uppercased()
+            + String(user.lastName.prefix(1)).uppercased()
     }
-    
+
     var body: some View {
         NavigationStack {
             VStack(spacing: 24) {
@@ -46,13 +47,13 @@ struct ProfileView: View {
                                     .fontWeight(.semibold)
                                     .foregroundStyle(.white)
                             }
-                        
+
                         // User Details
                         VStack(spacing: 4) {
                             Text(user.fullName)
                                 .font(.title2)
                                 .fontWeight(.semibold)
-                            
+
                             Text("@\(user.username)")
                                 .font(.subheadline)
                                 .foregroundStyle(.secondary)
@@ -60,19 +61,23 @@ struct ProfileView: View {
                     }
                     .padding(.top, 16)
                 }
-                
+
                 Spacer()
-                
+
                 // Emoji Input
                 VStack(spacing: 8) {
                     ZStack(alignment: .topTrailing) {
-                        EmojiTextField(text: $statusEmoji, isFocused: $isEmojiFieldFocused, placeholder: "+")
-                            .frame(width: 100, height: 100)
-                            .background(
-                                Circle()
-                                    .fill(Color(.systemGray6))
-                            )
-                        
+                        EmojiTextField(
+                            text: $statusEmoji,
+                            isFocused: $isEmojiFieldFocused,
+                            placeholder: "+"
+                        )
+                        .frame(width: 100, height: 100)
+                        .background(
+                            Circle()
+                                .fill(Color(.systemGray6))
+                        )
+
                         // Clear button - only show when emoji is selected
                         if !statusEmoji.isEmpty {
                             Button {
@@ -83,19 +88,28 @@ struct ProfileView: View {
                                 Image(systemName: "xmark.circle.fill")
                                     .font(.system(size: 28))
                                     .symbolRenderingMode(.palette)
-                                    .foregroundStyle(.white, Color(.systemGray3))
+                                    .foregroundStyle(
+                                        .white,
+                                        Color(.systemGray3)
+                                    )
                             }
                             .offset(x: 4, y: -4)
                             .transition(.scale.combined(with: .opacity))
                         }
                     }
-                    .animation(.easeInOut(duration: 0.15), value: statusEmoji.isEmpty)
-                    
-                    Text(statusEmoji.isEmpty ? "Tap to add emoji" : "Tap to change")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
+                    .animation(
+                        .easeInOut(duration: 0.15),
+                        value: statusEmoji.isEmpty
+                    )
+
+                    Text(
+                        statusEmoji.isEmpty
+                            ? "Tap to add emoji" : "Tap to change"
+                    )
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
                 }
-                
+
                 // Status Text Input
                 ZStack(alignment: .top) {
                     // Placeholder
@@ -105,7 +119,7 @@ struct ProfileView: View {
                             .foregroundStyle(.secondary)
                             .padding(.top, 16)
                     }
-                    
+
                     // Expanding TextEditor
                     TextEditor(text: $statusText)
                         .font(.title3)
@@ -123,9 +137,9 @@ struct ProfileView: View {
                         .fill(Color(.systemGray6))
                 )
                 .padding(.horizontal, 24)
-                
+
                 Spacer()
-                
+
                 // Feedback Messages
                 if let error = errorMessage {
                     Text(error)
@@ -133,14 +147,14 @@ struct ProfileView: View {
                         .foregroundStyle(.red)
                         .transition(.opacity)
                 }
-                
+
                 if showSuccess {
                     Label("Updated!", systemImage: "checkmark.circle.fill")
                         .font(.footnote)
                         .foregroundStyle(.green)
                         .transition(.opacity)
                 }
-                
+
                 // Update Button
                 Button {
                     Task {
@@ -161,11 +175,15 @@ struct ProfileView: View {
                     .frame(height: 56)
                     .background(
                         canUpdateStatus
-                            ? AnyShapeStyle(LinearGradient(
-                                colors: [Color.blue, Color.blue.opacity(0.8)],
-                                startPoint: .topLeading,
-                                endPoint: .bottomTrailing
-                            ))
+                            ? AnyShapeStyle(
+                                LinearGradient(
+                                    colors: [
+                                        Color.blue, Color.blue.opacity(0.8),
+                                    ],
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing
+                                )
+                            )
                             : AnyShapeStyle(Color.gray.opacity(0.5))
                     )
                     .foregroundStyle(.white)
@@ -193,10 +211,15 @@ struct ProfileView: View {
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
                     if isTextEditorFocused || isEmojiFieldFocused {
-                        Button("Done") {
+                        Button(action: {
                             isTextEditorFocused = false
                             isEmojiFieldFocused = false
+                        }) {
+                            Image(systemName: "checkmark")
                         }
+                        .buttonStyle(.borderedProminent) // 1. Applies the standard filled style
+                        .tint(.blue)                     // 2. Sets the fill color to blue
+                        .controlSize(.large)             // 3. (Optional) Adjusts the button size
                     }
                 }
             }
@@ -218,28 +241,29 @@ struct ProfileView: View {
             }
         }
     }
-    
+
     // MARK: - Private Methods
-    
+
     private func prefillCurrentStatus() {
-        guard !hasPrefilled, let currentStatus = viewModel.currentUserStatus else { return }
+        guard !hasPrefilled, let currentStatus = viewModel.currentUserStatus
+        else { return }
         hasPrefilled = true
         statusEmoji = currentStatus.statusEmoji ?? ""
         statusText = currentStatus.statusText
     }
-    
+
     private func updateStatus() async {
         isLoading = true
         errorMessage = nil
         showSuccess = false
-        
+
         do {
             try await APIClient.shared.updateStatus(
                 emoji: statusEmoji,
                 text: statusText
             )
             showSuccess = true
-            
+
             // Auto-hide success message after 2 seconds (cancel any existing task first)
             successDismissTask?.cancel()
             successDismissTask = Task {
@@ -250,7 +274,7 @@ struct ProfileView: View {
         } catch {
             errorMessage = error.localizedDescription
         }
-        
+
         isLoading = false
     }
 }
