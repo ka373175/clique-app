@@ -15,7 +15,8 @@ struct ProfileView: View {
     @State private var isLoading: Bool = false
     @State private var errorMessage: String?
     @State private var showSuccess: Bool = false
-    @State private var hasPrefilled: Bool = false
+    @State private var lastKnownEmoji: String?
+    @State private var lastKnownText: String?
     @State private var successDismissTask: Task<Void, Never>?
     @FocusState private var isTextEditorFocused: Bool
     @State private var isEmojiFieldFocused: Bool = false
@@ -157,6 +158,9 @@ struct ProfileView: View {
 
                 // Update Button
                 Button {
+                    // Guard against rapid taps before Task spawns
+                    guard !isLoading else { return }
+                    isLoading = true
                     Task {
                         await updateStatus()
                     }
@@ -245,15 +249,26 @@ struct ProfileView: View {
     // MARK: - Private Methods
 
     private func prefillCurrentStatus() {
-        guard !hasPrefilled, let currentStatus = viewModel.currentUserStatus
-        else { return }
-        hasPrefilled = true
-        statusEmoji = currentStatus.statusEmoji ?? ""
-        statusText = currentStatus.statusText
+        guard let currentStatus = viewModel.currentUserStatus else { return }
+        
+        // Only prefill if user hasn't started editing (fields still match last known status or are empty)
+        let hasUserEditedEmoji = !statusEmoji.isEmpty && statusEmoji != (lastKnownEmoji ?? "")
+        let hasUserEditedText = !statusText.isEmpty && statusText != (lastKnownText ?? "")
+        
+        if !hasUserEditedEmoji {
+            statusEmoji = currentStatus.statusEmoji ?? ""
+        }
+        if !hasUserEditedText {
+            statusText = currentStatus.statusText
+        }
+        
+        // Track what we prefilled so we can detect user edits
+        lastKnownEmoji = currentStatus.statusEmoji ?? ""
+        lastKnownText = currentStatus.statusText
     }
 
     private func updateStatus() async {
-        isLoading = true
+        // Note: isLoading is set to true before this Task is spawned to prevent race conditions
         errorMessage = nil
         showSuccess = false
 

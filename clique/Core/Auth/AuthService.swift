@@ -22,6 +22,9 @@ class AuthService: ObservableObject {
     /// In-memory cached token to avoid repeated Keychain reads
     private var cachedToken: String?
     
+    /// Flag to prevent concurrent token refresh operations
+    private var isRefreshing = false
+    
     private init() {
         loadStoredCredentials()
     }
@@ -76,6 +79,11 @@ class AuthService: ObservableObject {
     /// Refreshes the token if one exists. If refresh fails, logs out the user.
     /// Call this on app launch to ensure rolling session persistence.
     func refreshTokenIfNeeded() async {
+        // Prevent concurrent refresh calls
+        guard !isRefreshing else { return }
+        isRefreshing = true
+        defer { isRefreshing = false }
+        
         guard let token = getTokenFromKeychain(), !token.isEmpty else {
             // No token stored, nothing to refresh
             return
