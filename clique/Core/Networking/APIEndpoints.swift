@@ -9,7 +9,7 @@ import Foundation
 
 /// Centralized API endpoints for the Clique app
 enum APIEndpoints {
-    static let baseURL = "https://60q4fmxnb7.execute-api.us-east-2.amazonaws.com/prod"
+    static let baseURL = "https://u1ueb5q7q7.execute-api.us-east-2.amazonaws.com/prod"
     
     static let statuses = "\(baseURL)/statuses"
     static let addUser = "\(baseURL)/add-user"
