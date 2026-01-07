@@ -11,6 +11,7 @@ import SwiftUI
 class FriendsViewModel: ObservableObject {
     private let friendsCacheKey = "com.clique.cachedFriends"
     private let pendingRequestsCacheKey = "com.clique.cachedPendingRequests"
+    private let outgoingRequestsCacheKey = "com.clique.cachedOutgoingRequests"
     
     /// Tracks friend IDs currently being modified to prevent fetch from overwriting
     private var pendingMutations: Set<String> = []
@@ -19,12 +20,14 @@ class FriendsViewModel: ObservableObject {
     
     @Published var friends: [Friend] = []
     @Published var pendingRequests: [FriendRequest] = []
+    @Published var outgoingRequests: [OutgoingFriendRequest] = []
     @Published var isLoading = false
     @Published var errorMessage: String?
     
     init() {
         loadCachedFriends()
         loadCachedPendingRequests()
+        loadCachedOutgoingRequests()
     }
     
     /// Fetches the friends list from the API
@@ -39,8 +42,9 @@ class FriendsViewModel: ObservableObject {
         do {
             async let friendsResult = APIClient.shared.fetchFriends()
             async let requestsResult = APIClient.shared.fetchPendingFriendRequests()
+            async let outgoingResult = APIClient.shared.fetchOutgoingFriendRequests()
             
-            let (fetchedFriends, fetchedRequests) = try await (friendsResult, requestsResult)
+            let (fetchedFriends, fetchedRequests, fetchedOutgoing) = try await (friendsResult, requestsResult, outgoingResult)
             
             friends = fetchedFriends
             saveCachedFriends()
@@ -50,6 +54,9 @@ class FriendsViewModel: ObservableObject {
                 pendingRequests = fetchedRequests
                 saveCachedPendingRequests()
             }
+            
+            outgoingRequests = fetchedOutgoing
+            saveCachedOutgoingRequests()
         } catch {
             errorMessage = error.localizedDescription
         }
@@ -73,8 +80,19 @@ class FriendsViewModel: ObservableObject {
     /// Sends a friend request by username
     /// - Throws: Error if the request fails
     func addFriend(username: String) async throws {
-        // Just send the request - don't add to friends list since it's pending
-        _ = try await APIClient.shared.addFriend(username: username)
+        // Send the request and get the friend details back
+        let friend = try await APIClient.shared.addFriend(username: username)
+        
+        // Add to outgoing requests for immediate UI update
+        let outgoingRequest = OutgoingFriendRequest(
+            id: UUID().uuidString, // Temporary ID until next refresh
+            recipientId: friend.id,
+            username: friend.username,
+            firstName: friend.firstName,
+            lastName: friend.lastName
+        )
+        outgoingRequests.append(outgoingRequest)
+        saveCachedOutgoingRequests()
     }
     
     /// Removes a friend from the list
@@ -213,6 +231,19 @@ class FriendsViewModel: ObservableObject {
     private func saveCachedPendingRequests() {
         if let encoded = try? JSONEncoder().encode(pendingRequests) {
             UserDefaults.standard.set(encoded, forKey: pendingRequestsCacheKey)
+        }
+    }
+    
+    private func loadCachedOutgoingRequests() {
+        if let data = UserDefaults.standard.data(forKey: outgoingRequestsCacheKey),
+           let cached = try? JSONDecoder().decode([OutgoingFriendRequest].self, from: data) {
+            outgoingRequests = cached
+        }
+    }
+    
+    private func saveCachedOutgoingRequests() {
+        if let encoded = try? JSONEncoder().encode(outgoingRequests) {
+            UserDefaults.standard.set(encoded, forKey: outgoingRequestsCacheKey)
         }
     }
 }

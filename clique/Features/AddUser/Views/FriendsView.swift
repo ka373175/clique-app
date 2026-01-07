@@ -74,6 +74,17 @@ struct FriendsView: View {
                 }
             }
             
+            // Outgoing Requests Section (requests User A sent)
+            if !viewModel.outgoingRequests.isEmpty {
+                Section {
+                    ForEach(viewModel.outgoingRequests) { request in
+                        OutgoingFriendRequestRowView(request: request)
+                    }
+                } header: {
+                    Text("Pending")
+                }
+            }
+            
             // Friends Section
             Section {
                 ForEach(viewModel.friends) { friend in
@@ -88,7 +99,7 @@ struct FriendsView: View {
                         }
                 }
             } header: {
-                if !viewModel.pendingRequests.isEmpty {
+                if !viewModel.pendingRequests.isEmpty || !viewModel.outgoingRequests.isEmpty {
                     Text("Friends")
                 }
             }
@@ -255,6 +266,51 @@ private struct FriendRequestRowView: View {
                     .frame(minWidth: 44, minHeight: 44)
             }
             .buttonStyle(.borderless)
+        }
+    }
+}
+
+// MARK: - Outgoing Friend Request Row View
+
+private struct OutgoingFriendRequestRowView: View {
+    let request: OutgoingFriendRequest
+    
+    var body: some View {
+        HStack(spacing: 12) {
+            initialsCircle
+            nameStack
+        }
+        .padding(.vertical, 4)
+    }
+    
+    private var initialsCircle: some View {
+        ZStack {
+            Circle()
+                .fill(
+                    LinearGradient(
+                        colors: [.gray.opacity(0.6), .blue.opacity(0.5)],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    )
+                )
+                .frame(width: 44, height: 44)
+            
+            Text(request.initials)
+                .font(.headline)
+                .fontWeight(.semibold)
+                .foregroundStyle(.white)
+        }
+    }
+    
+    private var nameStack: some View {
+        VStack(alignment: .leading, spacing: 2) {
+            Text(request.fullName)
+                .font(.body)
+                .fontWeight(.medium)
+            
+            Text("@\(request.username)")
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
         }
     }
 }

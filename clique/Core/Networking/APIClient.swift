@@ -316,6 +316,32 @@ actor APIClient {
         return try jsonDecoder.decode([FriendRequest].self, from: data)
     }
     
+    /// Fetches outgoing friend requests sent by the current user
+    func fetchOutgoingFriendRequests() async throws -> [OutgoingFriendRequest] {
+        guard let url = URL(string: APIEndpoints.outgoingFriendRequests) else {
+            throw APIError.invalidURL
+        }
+        
+        var request = URLRequest(url: url)
+        try await addAuthHeader(to: &request)
+        
+        let (data, response) = try await URLSession.shared.data(for: request)
+        
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw APIError.invalidResponse
+        }
+        
+        if httpResponse.statusCode == 401 {
+            throw APIError.unauthorized
+        }
+        
+        guard (200...299).contains(httpResponse.statusCode) else {
+            throw APIError.invalidResponse
+        }
+        
+        return try jsonDecoder.decode([OutgoingFriendRequest].self, from: data)
+    }
+    
     /// Approves a friend request
     func approveFriendRequest(friendshipId: String) async throws {
         try await respondToFriendRequest(friendshipId: friendshipId, action: "accept")
