@@ -89,7 +89,7 @@ struct FriendsView: View {
             Section {
                 ForEach(viewModel.friends) { friend in
                     FriendRowView(friend: friend)
-                        .swipeActions(edge: .trailing, allowsFullSwipe: false) {
+                        .swipeActions(edge: .trailing, allowsFullSwipe: true) {
                             Button(role: .destructive) {
                                 friendToDelete = friend
                                 showingDeleteConfirmation = true
