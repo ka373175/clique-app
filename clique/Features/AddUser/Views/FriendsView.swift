@@ -59,16 +59,38 @@ struct FriendsView: View {
     
     private var friendsListContent: some View {
         List {
-            ForEach(viewModel.friends) { friend in
-                FriendRowView(friend: friend)
-                    .swipeActions(edge: .trailing, allowsFullSwipe: false) {
-                        Button(role: .destructive) {
-                            friendToDelete = friend
-                            showingDeleteConfirmation = true
-                        } label: {
-                            Label("Delete", systemImage: "trash")
-                        }
+            // Pending Requests Section
+            if !viewModel.pendingRequests.isEmpty {
+                Section {
+                    ForEach(viewModel.pendingRequests) { request in
+                        FriendRequestRowView(
+                            request: request,
+                            onApprove: { viewModel.approveFriendRequestOptimistically(request) },
+                            onDeny: { viewModel.denyFriendRequestOptimistically(request) }
+                        )
                     }
+                } header: {
+                    Text("Friend Requests")
+                }
+            }
+            
+            // Friends Section
+            Section {
+                ForEach(viewModel.friends) { friend in
+                    FriendRowView(friend: friend)
+                        .swipeActions(edge: .trailing, allowsFullSwipe: false) {
+                            Button(role: .destructive) {
+                                friendToDelete = friend
+                                showingDeleteConfirmation = true
+                            } label: {
+                                Label("Delete", systemImage: "trash")
+                            }
+                        }
+                }
+            } header: {
+                if !viewModel.pendingRequests.isEmpty {
+                    Text("Friends")
+                }
             }
         }
         .listStyle(.plain)
@@ -160,6 +182,79 @@ private struct FriendRowView: View {
             Text("@\(friend.username)")
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
+        }
+    }
+}
+
+// MARK: - Friend Request Row View
+
+private struct FriendRequestRowView: View {
+    let request: FriendRequest
+    let onApprove: () -> Void
+    let onDeny: () -> Void
+    
+    var body: some View {
+        HStack(spacing: 12) {
+            initialsCircle
+            nameStack
+            Spacer()
+            actionButtons
+        }
+        .padding(.vertical, 4)
+    }
+    
+    private var initialsCircle: some View {
+        ZStack {
+            Circle()
+                .fill(
+                    LinearGradient(
+                        colors: [.orange.opacity(0.7), .yellow.opacity(0.7)],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    )
+                )
+                .frame(width: 44, height: 44)
+            
+            Text(request.initials)
+                .font(.headline)
+                .fontWeight(.semibold)
+                .foregroundStyle(.white)
+        }
+    }
+    
+    private var nameStack: some View {
+        VStack(alignment: .leading, spacing: 2) {
+            Text(request.fullName)
+                .font(.body)
+                .fontWeight(.medium)
+            
+            Text("@\(request.username)")
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
+        }
+    }
+    
+    private var actionButtons: some View {
+        HStack(spacing: 12) {
+            Button {
+                onDeny()
+            } label: {
+                Image(systemName: "xmark.circle.fill")
+                    .font(.title)
+                    .foregroundStyle(.red)
+                    .frame(minWidth: 44, minHeight: 44)
+            }
+            .buttonStyle(.borderless)
+            
+            Button {
+                onApprove()
+            } label: {
+                Image(systemName: "checkmark.circle.fill")
+                    .font(.title)
+                    .foregroundStyle(.green)
+                    .frame(minWidth: 44, minHeight: 44)
+            }
+            .buttonStyle(.borderless)
         }
     }
 }

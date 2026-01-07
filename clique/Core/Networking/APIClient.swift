@@ -288,6 +288,77 @@ actor APIClient {
         }
     }
     
+    // MARK: - Friend Requests
+    
+    /// Fetches pending friend requests for the current user
+    func fetchPendingFriendRequests() async throws -> [FriendRequest] {
+        guard let url = URL(string: APIEndpoints.pendingFriendRequests) else {
+            throw APIError.invalidURL
+        }
+        
+        var request = URLRequest(url: url)
+        try await addAuthHeader(to: &request)
+        
+        let (data, response) = try await URLSession.shared.data(for: request)
+        
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw APIError.invalidResponse
+        }
+        
+        if httpResponse.statusCode == 401 {
+            throw APIError.unauthorized
+        }
+        
+        guard (200...299).contains(httpResponse.statusCode) else {
+            throw APIError.invalidResponse
+        }
+        
+        return try jsonDecoder.decode([FriendRequest].self, from: data)
+    }
+    
+    /// Approves a friend request
+    func approveFriendRequest(friendshipId: String) async throws {
+        try await respondToFriendRequest(friendshipId: friendshipId, action: "accept")
+    }
+    
+    /// Denies a friend request
+    func denyFriendRequest(friendshipId: String) async throws {
+        try await respondToFriendRequest(friendshipId: friendshipId, action: "deny")
+    }
+    
+    /// Responds to a friend request with the given action
+    private func respondToFriendRequest(friendshipId: String, action: String) async throws {
+        guard let url = URL(string: APIEndpoints.respondFriendRequest) else {
+            throw APIError.invalidURL
+        }
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        try await addAuthHeader(to: &request)
+        
+        let body = RespondFriendRequestBody(friendshipId: friendshipId, action: action)
+        request.httpBody = try jsonEncoder.encode(body)
+        
+        let (_, response) = try await URLSession.shared.data(for: request)
+        
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw APIError.invalidResponse
+        }
+        
+        if httpResponse.statusCode == 401 {
+            throw APIError.unauthorized
+        }
+        
+        if httpResponse.statusCode == 404 {
+            throw APIError.friendRequestNotFound
+        }
+        
+        guard (200...299).contains(httpResponse.statusCode) else {
+            throw APIError.requestFailed
+        }
+    }
+    
     // MARK: - Private Helpers
     
     /// Adds the Authorization header with the JWT token
@@ -310,6 +381,8 @@ enum APIError: LocalizedError {
     case userNotFound
     case alreadyFriends
     case friendshipNotFound
+    case requestAlreadySent
+    case friendRequestNotFound
     
     var errorDescription: String? {
         switch self {
@@ -331,6 +404,10 @@ enum APIError: LocalizedError {
             return "Already friends with this user"
         case .friendshipNotFound:
             return "Friendship not found"
+        case .requestAlreadySent:
+            return "Friend request already sent"
+        case .friendRequestNotFound:
+            return "Friend request not found"
         }
     }
 }
@@ -369,4 +446,9 @@ private struct RemoveFriendRequest: Encodable {
 private struct AddFriendResponse: Decodable {
     let message: String
     let friend: Friend
+}
+
+private struct RespondFriendRequestBody: Encodable {
+    let friendshipId: String
+    let action: String
 }

@@ -137,6 +137,7 @@ struct ProfileView: View {
             .onTapGesture {
                 isTextEditorFocused = false
                 isEmojiFieldFocused = false
+                fireAndForgetUpdateStatus()
             }
             .navigationTitle("Profile")
             .toolbar {
@@ -195,6 +196,18 @@ struct ProfileView: View {
     }
 
     private func fireAndForgetUpdateStatus() {
+        // Only update if values have changed from last known server values
+        let emojiChanged = statusEmoji != (lastKnownEmoji ?? "")
+        let textChanged = statusText != (lastKnownText ?? "")
+        
+        guard emojiChanged || textChanged else {
+            return // No changes to send
+        }
+        
+        // Update last known values to current values
+        lastKnownEmoji = statusEmoji
+        lastKnownText = statusText
+        
         // Fire and forget - don't wait for response
         Task {
             try? await APIClient.shared.updateStatus(

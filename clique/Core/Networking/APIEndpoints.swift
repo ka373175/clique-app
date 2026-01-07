@@ -24,5 +24,7 @@ enum APIEndpoints {
     static let friends = "\(baseURL)/friends"
     static let addFriend = "\(baseURL)/add-friend"
     static let removeFriend = "\(baseURL)/remove-friend"
+    static let pendingFriendRequests = "\(baseURL)/pending-friend-requests"
+    static let respondFriendRequest = "\(baseURL)/respond-friend-request"
 }
 

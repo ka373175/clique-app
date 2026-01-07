@@ -10,16 +10,21 @@ import SwiftUI
 @MainActor
 class FriendsViewModel: ObservableObject {
     private let friendsCacheKey = "com.clique.cachedFriends"
+    private let pendingRequestsCacheKey = "com.clique.cachedPendingRequests"
     
     /// Tracks friend IDs currently being modified to prevent fetch from overwriting
     private var pendingMutations: Set<String> = []
+    /// Tracks request IDs currently being processed
+    private var pendingRequestMutations: Set<String> = []
     
     @Published var friends: [Friend] = []
+    @Published var pendingRequests: [FriendRequest] = []
     @Published var isLoading = false
     @Published var errorMessage: String?
     
     init() {
         loadCachedFriends()
+        loadCachedPendingRequests()
     }
     
     /// Fetches the friends list from the API
@@ -32,22 +37,45 @@ class FriendsViewModel: ObservableObject {
         defer { isLoading = false }
         
         do {
-            friends = try await APIClient.shared.fetchFriends()
+            async let friendsResult = APIClient.shared.fetchFriends()
+            async let requestsResult = APIClient.shared.fetchPendingFriendRequests()
+            
+            let (fetchedFriends, fetchedRequests) = try await (friendsResult, requestsResult)
+            
+            friends = fetchedFriends
             saveCachedFriends()
+            
+            // Only update pending requests if no pending mutations
+            if pendingRequestMutations.isEmpty {
+                pendingRequests = fetchedRequests
+                saveCachedPendingRequests()
+            }
         } catch {
             errorMessage = error.localizedDescription
         }
     }
     
-    /// Adds a friend by username
+    /// Fetches only pending friend requests
+    func fetchPendingRequests() async {
+        guard pendingRequestMutations.isEmpty else { return }
+        
+        do {
+            pendingRequests = try await APIClient.shared.fetchPendingFriendRequests()
+            saveCachedPendingRequests()
+        } catch {
+            // Silently fail - pending requests are supplementary
+            print("Failed to fetch pending requests: \(error.localizedDescription)")
+        }
+    }
+    
+    /// Sends a friend request by username
     /// - Returns: True if successful, false otherwise
     func addFriend(username: String) async -> Bool {
         errorMessage = nil
         
         do {
-            let newFriend = try await APIClient.shared.addFriend(username: username)
-            friends.append(newFriend)
-            saveCachedFriends()
+            // Just send the request - don't add to friends list since it's pending
+            _ = try await APIClient.shared.addFriend(username: username)
             return true
         } catch {
             errorMessage = error.localizedDescription
@@ -100,6 +128,72 @@ class FriendsViewModel: ObservableObject {
         }
     }
     
+    /// Approves a friend request optimistically (fire-and-forget)
+    /// Immediately removes from pending list and adds to friends, fires API in background
+    func approveFriendRequestOptimistically(_ request: FriendRequest) {
+        guard let index = pendingRequests.firstIndex(where: { $0.id == request.id }) else { return }
+        
+        // Track this mutation
+        pendingRequestMutations.insert(request.id)
+        
+        // Optimistically remove from pending and add to friends
+        pendingRequests.remove(at: index)
+        let newFriend = Friend(
+            id: request.requesterId,
+            username: request.username,
+            firstName: request.firstName,
+            lastName: request.lastName
+        )
+        friends.append(newFriend)
+        saveCachedPendingRequests()
+        saveCachedFriends()
+        
+        // Fire API call in background
+        Task {
+            defer { pendingRequestMutations.remove(request.id) }
+            
+            do {
+                try await APIClient.shared.approveFriendRequest(friendshipId: request.id)
+            } catch {
+                // If API call fails, restore the pending request and remove the friend
+                let safeIndex = min(index, pendingRequests.count)
+                pendingRequests.insert(request, at: safeIndex)
+                friends.removeAll { $0.id == newFriend.id }
+                saveCachedPendingRequests()
+                saveCachedFriends()
+                errorMessage = "Failed to approve friend request: \(error.localizedDescription)"
+            }
+        }
+    }
+    
+    /// Denies a friend request optimistically (fire-and-forget)
+    /// Immediately removes from pending list, fires API in background
+    func denyFriendRequestOptimistically(_ request: FriendRequest) {
+        guard let index = pendingRequests.firstIndex(where: { $0.id == request.id }) else { return }
+        
+        // Track this mutation
+        pendingRequestMutations.insert(request.id)
+        
+        // Optimistically remove from pending
+        pendingRequests.remove(at: index)
+        saveCachedPendingRequests()
+        
+        // Fire API call in background
+        Task {
+            defer { pendingRequestMutations.remove(request.id) }
+            
+            do {
+                try await APIClient.shared.denyFriendRequest(friendshipId: request.id)
+            } catch {
+                // If API call fails, restore the pending request
+                let safeIndex = min(index, pendingRequests.count)
+                pendingRequests.insert(request, at: safeIndex)
+                saveCachedPendingRequests()
+                errorMessage = "Failed to deny friend request: \(error.localizedDescription)"
+            }
+        }
+    }
+    
     // MARK: - Cache Operations
     
     private func loadCachedFriends() {
@@ -112,6 +206,19 @@ class FriendsViewModel: ObservableObject {
     private func saveCachedFriends() {
         if let encoded = try? JSONEncoder().encode(friends) {
             UserDefaults.standard.set(encoded, forKey: friendsCacheKey)
+        }
+    }
+    
+    private func loadCachedPendingRequests() {
+        if let data = UserDefaults.standard.data(forKey: pendingRequestsCacheKey),
+           let cached = try? JSONDecoder().decode([FriendRequest].self, from: data) {
+            pendingRequests = cached
+        }
+    }
+    
+    private func saveCachedPendingRequests() {
+        if let encoded = try? JSONEncoder().encode(pendingRequests) {
+            UserDefaults.standard.set(encoded, forKey: pendingRequestsCacheKey)
         }
     }
 }
