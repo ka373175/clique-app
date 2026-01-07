@@ -12,20 +12,10 @@ struct ProfileView: View {
     @ObservedObject private var authService = AuthService.shared
     @State private var statusEmoji: String = ""
     @State private var statusText: String = ""
-    @State private var isLoading: Bool = false
-    @State private var errorMessage: String?
-    @State private var showSuccess: Bool = false
     @State private var lastKnownEmoji: String?
     @State private var lastKnownText: String?
-    @State private var successDismissTask: Task<Void, Never>?
     @FocusState private var isTextEditorFocused: Bool
     @State private var isEmojiFieldFocused: Bool = false
-
-    // MARK: - Computed Properties
-
-    private var canUpdateStatus: Bool {
-        !statusText.isEmpty && !isLoading
-    }
 
     private func userInitials(for user: User) -> String {
         String(user.firstName.prefix(1)).uppercased()
@@ -141,70 +131,7 @@ struct ProfileView: View {
 
                 Spacer()
 
-                // Feedback Messages
-                if let error = errorMessage {
-                    Text(error)
-                        .font(.footnote)
-                        .foregroundStyle(.red)
-                        .transition(.opacity)
-                }
 
-                if showSuccess {
-                    Label("Updated!", systemImage: "checkmark.circle.fill")
-                        .font(.footnote)
-                        .foregroundStyle(.green)
-                        .transition(.opacity)
-                }
-
-                // Update Button
-                Button {
-                    // Guard against rapid taps before Task spawns
-                    guard !isLoading else { return }
-                    isLoading = true
-                    Task {
-                        await updateStatus()
-                    }
-                } label: {
-                    Group {
-                        if isLoading {
-                            ProgressView()
-                                .tint(.white)
-                        } else {
-                            Text("Update Status")
-                                .font(.headline)
-                                .fontWeight(.semibold)
-                        }
-                    }
-                    .frame(maxWidth: .infinity)
-                    .frame(height: 56)
-                    .background(
-                        canUpdateStatus
-                            ? AnyShapeStyle(
-                                LinearGradient(
-                                    colors: [
-                                        Color.blue, Color.blue.opacity(0.8),
-                                    ],
-                                    startPoint: .topLeading,
-                                    endPoint: .bottomTrailing
-                                )
-                            )
-                            : AnyShapeStyle(Color.gray.opacity(0.5))
-                    )
-                    .foregroundStyle(.white)
-                    .clipShape(RoundedRectangle(cornerRadius: 16))
-                    .shadow(
-                        color: canUpdateStatus ? .blue.opacity(0.3) : .clear,
-                        radius: 8,
-                        y: 4
-                    )
-                }
-                .disabled(!canUpdateStatus)
-                .opacity(canUpdateStatus ? 1.0 : 0.6)
-                .scaleEffect(canUpdateStatus ? 1.0 : 0.98)
-                .animation(.easeInOut(duration: 0.2), value: canUpdateStatus)
-                .padding(.horizontal, 24)
-                .padding(.bottom, 24)
-                .contentShape(RoundedRectangle(cornerRadius: 16))
             }
             .contentShape(Rectangle())
             .onTapGesture {
@@ -214,24 +141,26 @@ struct ProfileView: View {
             .navigationTitle("Profile")
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
-                    if isTextEditorFocused || isEmojiFieldFocused {
+                    if isTextEditorFocused {
                         Button(action: {
                             isTextEditorFocused = false
-                            isEmojiFieldFocused = false
+                            fireAndForgetUpdateStatus()
                         }) {
-                            Image(systemName: "checkmark")
+                            Text("Update")
                         }
-                        .buttonStyle(.borderedProminent) // 1. Applies the standard filled style
-                        .tint(.blue)                     // 2. Sets the fill color to blue
-                        .controlSize(.large)             // 3. (Optional) Adjusts the button size
+                        .buttonStyle(.borderedProminent)
+                        .tint(.blue)
+                        .controlSize(.large)
                     }
                 }
             }
-            .animation(.easeInOut(duration: 0.2), value: errorMessage)
-            .animation(.easeInOut(duration: 0.2), value: showSuccess)
             .animation(.easeInOut(duration: 0.2), value: isTextEditorFocused)
             .onChange(of: viewModel.currentUserStatus) { _, _ in
                 prefillCurrentStatus()
+            }
+            .onChange(of: statusEmoji) { _, _ in
+                // Fire and forget when emoji changes
+                fireAndForgetUpdateStatus()
             }
             .task {
                 // Fetch statuses if not already loaded (handles direct navigation to ProfileView)
@@ -240,9 +169,7 @@ struct ProfileView: View {
                 }
                 prefillCurrentStatus()
             }
-            .onDisappear {
-                successDismissTask?.cancel()
-            }
+
         }
     }
 
@@ -267,30 +194,14 @@ struct ProfileView: View {
         lastKnownText = currentStatus.statusText
     }
 
-    private func updateStatus() async {
-        // Note: isLoading is set to true before this Task is spawned to prevent race conditions
-        errorMessage = nil
-        showSuccess = false
-
-        do {
-            try await APIClient.shared.updateStatus(
+    private func fireAndForgetUpdateStatus() {
+        // Fire and forget - don't wait for response
+        Task {
+            try? await APIClient.shared.updateStatus(
                 emoji: statusEmoji,
                 text: statusText
             )
-            showSuccess = true
-
-            // Auto-hide success message after 2 seconds (cancel any existing task first)
-            successDismissTask?.cancel()
-            successDismissTask = Task {
-                try? await Task.sleep(for: .seconds(2))
-                guard !Task.isCancelled else { return }
-                showSuccess = false
-            }
-        } catch {
-            errorMessage = error.localizedDescription
         }
-
-        isLoading = false
     }
 }
 
