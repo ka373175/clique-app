@@ -70,17 +70,11 @@ class FriendsViewModel: ObservableObject {
     
     /// Sends a friend request by username
     /// - Returns: True if successful, false otherwise
-    func addFriend(username: String) async -> Bool {
-        errorMessage = nil
-        
-        do {
-            // Just send the request - don't add to friends list since it's pending
-            _ = try await APIClient.shared.addFriend(username: username)
-            return true
-        } catch {
-            errorMessage = error.localizedDescription
-            return false
-        }
+    /// Sends a friend request by username
+    /// - Throws: Error if the request fails
+    func addFriend(username: String) async throws {
+        // Just send the request - don't add to friends list since it's pending
+        _ = try await APIClient.shared.addFriend(username: username)
     }
     
     /// Removes a friend from the list

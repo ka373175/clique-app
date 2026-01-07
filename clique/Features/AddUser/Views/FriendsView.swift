@@ -334,12 +334,12 @@ private struct AddFriendSheet: View {
         errorMessage = nil
         
         let trimmedUsername = username.trimmingCharacters(in: .whitespaces)
-        let success = await viewModel.addFriend(username: trimmedUsername)
         
-        if success {
+        do {
+            try await viewModel.addFriend(username: trimmedUsername)
             dismiss()
-        } else {
-            errorMessage = viewModel.errorMessage
+        } catch {
+            errorMessage = error.localizedDescription
         }
         
         isAdding = false
