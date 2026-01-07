@@ -163,12 +163,13 @@ struct ProfileView: View {
                 // Fire and forget when emoji changes
                 fireAndForgetUpdateStatus()
             }
-            .task {
-                // Fetch statuses if not already loaded (handles direct navigation to ProfileView)
-                if viewModel.currentUserStatus == nil && !viewModel.isLoading {
+            .onAppear {
+                // Prefill immediately from cache while fetch is in progress
+                prefillCurrentStatus()
+                // Always fetch fresh status when view appears to ensure latest data
+                Task {
                     await viewModel.fetchStatuses()
                 }
-                prefillCurrentStatus()
             }
 
         }
@@ -207,6 +208,9 @@ struct ProfileView: View {
         // Update last known values to current values
         lastKnownEmoji = statusEmoji
         lastKnownText = statusText
+        
+        // Optimistically update the ViewModel's cached status
+        viewModel.updateCurrentUserStatusOptimistically(emoji: statusEmoji, text: statusText)
         
         // Fire and forget - don't wait for response
         Task {

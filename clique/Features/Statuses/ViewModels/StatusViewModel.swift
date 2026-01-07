@@ -83,4 +83,23 @@ class StatusViewModel: ObservableObject {
             UserDefaults.standard.set(encoded, forKey: friendStatusesKey)
         }
     }
+    
+    /// Optimistically update the current user's status in memory and cache
+    /// Call this after the user updates their status to keep the cache in sync
+    func updateCurrentUserStatusOptimistically(emoji: String, text: String) {
+        guard let current = currentUserStatus else { return }
+        
+        // Create a new FullStatus with updated values
+        currentUserStatus = FullStatus(
+            id: current.id,
+            statusText: text,
+            statusEmoji: emoji.isEmpty ? nil : emoji,
+            firstName: current.firstName,
+            lastName: current.lastName,
+            isCurrentUser: current.isCurrentUser
+        )
+        
+        // Update the cache immediately
+        saveCachedStatuses()
+    }
 }
