@@ -212,11 +212,15 @@ struct ProfileView: View {
         // Optimistically update the ViewModel's cached status
         viewModel.updateCurrentUserStatusOptimistically(emoji: statusEmoji, text: statusText)
         
+        // Capture local copies to avoid holding view state references
+        let emoji = statusEmoji
+        let text = statusText
+        
         // Fire and forget - don't wait for response
         Task {
             try? await APIClient.shared.updateStatus(
-                emoji: statusEmoji,
-                text: statusText
+                emoji: emoji,
+                text: text
             )
         }
     }

@@ -125,7 +125,8 @@ class FriendsViewModel: ObservableObject {
         saveCachedFriends()
         
         // Fire API call in background
-        Task {
+        Task { [weak self] in
+            guard let self else { return }
             defer { pendingMutations.remove(friend.id) }
             
             do {
@@ -161,7 +162,8 @@ class FriendsViewModel: ObservableObject {
         saveCachedFriends()
         
         // Fire API call in background
-        Task {
+        Task { [weak self] in
+            guard let self else { return }
             defer { pendingRequestMutations.remove(request.id) }
             
             do {
@@ -191,7 +193,8 @@ class FriendsViewModel: ObservableObject {
         saveCachedPendingRequests()
         
         // Fire API call in background
-        Task {
+        Task { [weak self] in
+            guard let self else { return }
             defer { pendingRequestMutations.remove(request.id) }
             
             do {

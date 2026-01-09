@@ -28,7 +28,8 @@ class StatusViewModel: ObservableObject {
         // Cancel any existing fetch to prevent race conditions
         activeFetchTask?.cancel()
         
-        let task = Task {
+        let task = Task { [weak self] in
+            guard let self else { return }
             isLoading = true
             errorMessage = nil
             defer { isLoading = false }

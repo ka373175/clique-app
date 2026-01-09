@@ -41,38 +41,48 @@ struct EmojiTextField: UIViewRepresentable {
     func updateUIView(_ uiView: EmojiUITextField, context: Context) {
         uiView.text = text
         
+        // Keep coordinator bindings in sync with view updates
+        context.coordinator.update(text: $text, isFocused: $isFocused)
+        
         // Handle focus state changes from SwiftUI
         DispatchQueue.main.async {
-            if isFocused && !uiView.isFirstResponder {
+            if self.isFocused && !uiView.isFirstResponder {
                 uiView.becomeFirstResponder()
-            } else if !isFocused && uiView.isFirstResponder {
+            } else if !self.isFocused && uiView.isFirstResponder {
                 uiView.resignFirstResponder()
             }
         }
     }
     
     func makeCoordinator() -> Coordinator {
-        Coordinator(self)
+        Coordinator(text: $text, isFocused: $isFocused)
     }
     
     class Coordinator: NSObject, UITextFieldDelegate {
-        var parent: EmojiTextField
+        var text: Binding<String>
+        var isFocused: Binding<Bool>
         weak var textField: UITextField?
         
-        init(_ parent: EmojiTextField) {
-            self.parent = parent
+        init(text: Binding<String>, isFocused: Binding<Bool>) {
+            self.text = text
+            self.isFocused = isFocused
+        }
+        
+        func update(text: Binding<String>, isFocused: Binding<Bool>) {
+            self.text = text
+            self.isFocused = isFocused
         }
         
         func textField(_ textField: UITextField, shouldChangeCharactersIn range: NSRange, replacementString string: String) -> Bool {
             // Allow deletion
             if string.isEmpty {
-                parent.text = ""
+                text.wrappedValue = ""
                 return true
             }
             
             // Check if the input is an emoji
             if string.isSingleEmoji {
-                parent.text = string
+                text.wrappedValue = string
                 textField.text = string
                 // Dismiss keyboard after selection
                 textField.resignFirstResponder()
@@ -89,11 +99,11 @@ struct EmojiTextField: UIViewRepresentable {
         }
         
         func textFieldDidBeginEditing(_ textField: UITextField) {
-            parent.isFocused = true
+            isFocused.wrappedValue = true
         }
         
         func textFieldDidEndEditing(_ textField: UITextField) {
-            parent.isFocused = false
+            isFocused.wrappedValue = false
         }
     }
 }
