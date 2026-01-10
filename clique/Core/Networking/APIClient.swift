@@ -187,6 +187,35 @@ actor APIClient {
         }
     }
     
+    /// Updates the icon color for the authenticated user
+    func updateIconColor(_ iconColor: String) async throws {
+        guard let url = URL(string: APIEndpoints.updateStatus) else {
+            throw APIError.invalidURL
+        }
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        try await addAuthHeader(to: &request)
+        
+        let body = UpdateIconColorRequest(iconColor: iconColor)
+        request.httpBody = try jsonEncoder.encode(body)
+        
+        let (_, response) = try await URLSession.shared.data(for: request)
+        
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw APIError.invalidResponse
+        }
+        
+        if httpResponse.statusCode == 401 {
+            throw APIError.unauthorized
+        }
+        
+        guard (200...299).contains(httpResponse.statusCode) else {
+            throw APIError.requestFailed
+        }
+    }
+    
     // MARK: - Friends
     
     /// Fetches the current user's friends list
@@ -477,4 +506,8 @@ private struct AddFriendResponse: Decodable {
 private struct RespondFriendRequestBody: Encodable {
     let friendshipId: String
     let action: String
+}
+
+private struct UpdateIconColorRequest: Encodable {
+    let iconColor: String
 }

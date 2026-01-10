@@ -16,7 +16,7 @@ struct StatusRowView: View {
             ZStack {
                 // Person icon
                 Circle()
-                    .fill(Color.black)
+                    .fill(IconColor.from(status.iconColor).color.gradient)
                     .frame(width: 50, height: 50)
                 // Initials
                 Text(status.initials)

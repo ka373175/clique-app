@@ -168,14 +168,8 @@ private struct FriendRowView: View {
     private var initialsCircle: some View {
         ZStack {
             Circle()
-            .fill(
-                LinearGradient(
-                    colors: [.blue.opacity(0.7), .purple.opacity(0.7)],
-                    startPoint: .topLeading,
-                    endPoint: .bottomTrailing
-                )
-            )
-            .frame(width: 44, height: 44)
+                .fill(IconColor.from(friend.iconColor).color.gradient)
+                .frame(width: 44, height: 44)
             
             Text(friend.initials)
                 .font(.headline)

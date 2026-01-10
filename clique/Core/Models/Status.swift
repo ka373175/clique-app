@@ -44,6 +44,12 @@ struct FullStatus: Codable, Hashable, Identifiable {
      */
     let isCurrentUser: Bool
     
+    /*
+     iconColor: string?
+     The user's selected icon background color
+     */
+    let iconColor: String?
+    
     /// Computed initials for efficient display in views
     var initials: String {
         "\(firstName.prefix(1))\(lastName.prefix(1))"
@@ -56,5 +62,6 @@ struct FullStatus: Codable, Hashable, Identifiable {
         case firstName
         case lastName
         case isCurrentUser
+        case iconColor
     }
 }

@@ -13,18 +13,20 @@ struct Friend: Codable, Identifiable {
     let username: String
     let firstName: String
     let lastName: String
+    let iconColor: String?
     
     enum CodingKeys: String, CodingKey {
         case id = "_id"
-        case username, firstName, lastName
+        case username, firstName, lastName, iconColor
     }
     
     /// Memberwise initializer for creating Friend instances
-    init(id: String, username: String, firstName: String, lastName: String) {
+    init(id: String, username: String, firstName: String, lastName: String, iconColor: String? = nil) {
         self.id = id
         self.username = username
         self.firstName = firstName
         self.lastName = lastName
+        self.iconColor = iconColor
     }
     
     /// Codable initializer
@@ -34,6 +36,7 @@ struct Friend: Codable, Identifiable {
         username = try container.decode(String.self, forKey: .username)
         firstName = try container.decode(String.self, forKey: .firstName)
         lastName = try container.decode(String.self, forKey: .lastName)
+        iconColor = try container.decodeIfPresent(String.self, forKey: .iconColor)
     }
     
     /// Full display name

@@ -97,10 +97,28 @@ class StatusViewModel: ObservableObject {
             statusEmoji: emoji.isEmpty ? nil : emoji,
             firstName: current.firstName,
             lastName: current.lastName,
-            isCurrentUser: current.isCurrentUser
+            isCurrentUser: current.isCurrentUser,
+            iconColor: current.iconColor
         )
         
         // Update the cache immediately
+        saveCachedStatuses()
+    }
+    
+    /// Optimistically update the current user's icon color in memory and cache
+    func updateCurrentUserIconColorOptimistically(_ iconColor: String) {
+        guard let current = currentUserStatus else { return }
+        
+        currentUserStatus = FullStatus(
+            id: current.id,
+            statusText: current.statusText,
+            statusEmoji: current.statusEmoji,
+            firstName: current.firstName,
+            lastName: current.lastName,
+            isCurrentUser: current.isCurrentUser,
+            iconColor: iconColor
+        )
+        
         saveCachedStatuses()
     }
 }

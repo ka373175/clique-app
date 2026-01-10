@@ -14,6 +14,8 @@ struct ProfileView: View {
     @State private var statusText: String = ""
     @State private var lastKnownEmoji: String?
     @State private var lastKnownText: String?
+    @State private var iconColor: IconColor = .blue
+    @State private var showingColorPicker = false
     @FocusState private var isTextEditorFocused: Bool
     @State private var isEmojiFieldFocused: Bool = false
 
@@ -29,15 +31,27 @@ struct ProfileView: View {
                 if let user = authService.currentUser {
                     VStack(spacing: 12) {
                         // Avatar
-                        Circle()
-                            .fill(Color.blue.gradient)
-                            .frame(width: 80, height: 80)
-                            .overlay {
-                                Text(userInitials(for: user))
-                                    .font(.title)
-                                    .fontWeight(.semibold)
-                                    .foregroundStyle(.white)
-                            }
+                        Button {
+                            showingColorPicker = true
+                        } label: {
+                            Circle()
+                                .fill(iconColor.color.gradient)
+                                .frame(width: 80, height: 80)
+                                .overlay {
+                                    Text(userInitials(for: user))
+                                        .font(.title)
+                                        .fontWeight(.semibold)
+                                        .foregroundStyle(.white)
+                                }
+                                .overlay(alignment: .topTrailing) {
+                                    Image(systemName: "pencil.circle.fill")
+                                        .font(.system(size: 24))
+                                        .symbolRenderingMode(.palette)
+                                        .foregroundStyle(.white, .blue)
+                                        .offset(x: 4, y: -4)
+                                }
+                        }
+                        .buttonStyle(.plain)
 
                         // User Details
                         VStack(spacing: 4) {
@@ -171,6 +185,12 @@ struct ProfileView: View {
                     await viewModel.fetchStatuses()
                 }
             }
+            .sheet(isPresented: $showingColorPicker) {
+                IconColorPickerSheet(selectedColor: $iconColor) { newColor in
+                    fireAndForgetUpdateIconColor(newColor)
+                }
+                .presentationDetents([.medium])
+            }
 
         }
     }
@@ -190,6 +210,9 @@ struct ProfileView: View {
         if !hasUserEditedText {
             statusText = currentStatus.statusText
         }
+        
+        // Prefill icon color from cached status
+        iconColor = IconColor.from(currentStatus.iconColor)
         
         // Track what we prefilled so we can detect user edits
         lastKnownEmoji = currentStatus.statusEmoji ?? ""
@@ -222,6 +245,20 @@ struct ProfileView: View {
                 emoji: emoji,
                 text: text
             )
+        }
+    }
+    
+    private func fireAndForgetUpdateIconColor(_ newColor: IconColor) {
+        // Optimistically update UI
+        iconColor = newColor
+        
+        // Update via ViewModel for cache sync
+        viewModel.updateCurrentUserIconColorOptimistically(newColor.rawValue)
+        
+        // Fire and forget API call
+        let colorValue = newColor.rawValue
+        Task {
+            try? await APIClient.shared.updateIconColor(colorValue)
         }
     }
 }

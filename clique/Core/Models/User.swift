@@ -13,6 +13,7 @@ struct User: Codable, Equatable {
     let username: String
     let firstName: String
     let lastName: String
+    let iconColor: String?
     
     var fullName: String {
         "\(firstName) \(lastName)"
