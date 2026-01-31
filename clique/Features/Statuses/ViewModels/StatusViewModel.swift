@@ -98,7 +98,9 @@ class StatusViewModel: ObservableObject {
             firstName: current.firstName,
             lastName: current.lastName,
             isCurrentUser: current.isCurrentUser,
-            iconColor: current.iconColor
+            iconColor: current.iconColor,
+            latitude: current.latitude,
+            longitude: current.longitude
         )
         
         // Update the cache immediately
@@ -116,7 +118,9 @@ class StatusViewModel: ObservableObject {
             firstName: current.firstName,
             lastName: current.lastName,
             isCurrentUser: current.isCurrentUser,
-            iconColor: iconColor
+            iconColor: iconColor,
+            latitude: current.latitude,
+            longitude: current.longitude
         )
         
         saveCachedStatuses()

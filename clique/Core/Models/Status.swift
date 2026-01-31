@@ -50,6 +50,18 @@ struct FullStatus: Codable, Hashable, Identifiable {
      */
     let iconColor: String?
     
+    /*
+     latitude: double?
+     The user's latitude coordinate when sharing location
+     */
+    let latitude: Double?
+    
+    /*
+     longitude: double?
+     The user's longitude coordinate when sharing location
+     */
+    let longitude: Double?
+    
     /// Computed initials for efficient display in views
     var initials: String {
         "\(firstName.prefix(1))\(lastName.prefix(1))"
@@ -63,5 +75,7 @@ struct FullStatus: Codable, Hashable, Identifiable {
         case lastName
         case isCurrentUser
         case iconColor
+        case latitude
+        case longitude
     }
 }

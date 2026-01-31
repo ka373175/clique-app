@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import MapKit
 
 struct StatusDetailView: View {
     let status: FullStatus
@@ -36,6 +37,26 @@ struct StatusDetailView: View {
                 .foregroundStyle(status.statusText.isEmpty ? .tertiary : .secondary)
                 .multilineTextAlignment(.center)
                 .padding(.horizontal)
+            
+            // Location map (if available)
+            if let latitude = status.latitude, let longitude = status.longitude {
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("Location")
+                        .font(.headline)
+                        .padding(.horizontal)
+                    
+                    Map(position: .constant(.region(MKCoordinateRegion(
+                        center: CLLocationCoordinate2D(latitude: latitude, longitude: longitude),
+                        span: MKCoordinateSpan(latitudeDelta: 0.05, longitudeDelta: 0.05)
+                    )))) {
+                        Marker(status.firstName, coordinate: CLLocationCoordinate2D(latitude: latitude, longitude: longitude))
+                    }
+                    .frame(height: 200)
+                    .clipShape(RoundedRectangle(cornerRadius: 12))
+                    .padding(.horizontal)
+                }
+                .padding(.top, 16)
+            }
             
             Spacer()
         }

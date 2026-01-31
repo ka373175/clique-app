@@ -71,6 +71,7 @@ class AuthService: ObservableObject {
     func logout() {
         deleteTokenFromKeychain()
         deleteUserFromDefaults()
+        clearAllUserCaches()
         
         self.currentUser = nil
         self.isLoggedIn = false
@@ -196,6 +197,26 @@ class AuthService: ObservableObject {
     
     private func deleteUserFromDefaults() {
         UserDefaults.standard.removeObject(forKey: userKey)
+    }
+    
+    /// Clears all user-specific cached data from UserDefaults
+    /// This ensures that when a user logs out, the next user won't see cached data from the previous account
+    private func clearAllUserCaches() {
+        let cacheKeys = [
+            // StatusViewModel caches
+            "com.clique.cachedCurrentUserStatus",
+            "com.clique.cachedFriendStatuses",
+            // FriendsViewModel caches
+            "com.clique.cachedFriends",
+            "com.clique.cachedPendingRequests",
+            "com.clique.cachedOutgoingRequests",
+            // User preferences
+            "com.clique.shareLocation"
+        ]
+        
+        for key in cacheKeys {
+            UserDefaults.standard.removeObject(forKey: key)
+        }
     }
 }
 

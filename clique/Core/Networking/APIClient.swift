@@ -158,7 +158,7 @@ actor APIClient {
     }
     
     /// Updates the status for the authenticated user
-    func updateStatus(emoji: String, text: String) async throws {
+    func updateStatus(emoji: String, text: String, latitude: Double? = nil, longitude: Double? = nil) async throws {
         guard let url = URL(string: APIEndpoints.updateStatus) else {
             throw APIError.invalidURL
         }
@@ -168,11 +168,70 @@ actor APIClient {
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         try await addAuthHeader(to: &request)
         
-        let body = UpdateStatusRequest(statusEmoji: emoji, statusText: text)
+        let body = UpdateStatusRequest(statusEmoji: emoji, statusText: text, latitude: latitude, longitude: longitude)
         request.httpBody = try jsonEncoder.encode(body)
         
         let (_, response) = try await URLSession.shared.data(for: request)
         print(response)
+        
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw APIError.invalidResponse
+        }
+        
+        if httpResponse.statusCode == 401 {
+            throw APIError.unauthorized
+        }
+        
+        guard (200...299).contains(httpResponse.statusCode) else {
+            throw APIError.requestFailed
+        }
+    }
+    
+    /// Updates the location for the authenticated user
+    func updateLocation(latitude: Double, longitude: Double) async throws {
+        guard let url = URL(string: APIEndpoints.updateStatus) else {
+            throw APIError.invalidURL
+        }
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        try await addAuthHeader(to: &request)
+        
+        let body = UpdateLocationRequest(latitude: latitude, longitude: longitude)
+        request.httpBody = try jsonEncoder.encode(body)
+        
+        let (_, response) = try await URLSession.shared.data(for: request)
+        
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw APIError.invalidResponse
+        }
+        
+        if httpResponse.statusCode == 401 {
+            throw APIError.unauthorized
+        }
+        
+        guard (200...299).contains(httpResponse.statusCode) else {
+            throw APIError.requestFailed
+        }
+    }
+    
+    /// Clears the location for the authenticated user (stops sharing location)
+    func clearLocation() async throws {
+        guard let url = URL(string: APIEndpoints.updateStatus) else {
+            throw APIError.invalidURL
+        }
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        try await addAuthHeader(to: &request)
+        
+        // Manually create JSON with null values to clear location fields
+        let jsonDict: [String: Any?] = ["latitude": nil, "longitude": nil]
+        request.httpBody = try JSONSerialization.data(withJSONObject: jsonDict, options: [])
+        
+        let (_, response) = try await URLSession.shared.data(for: request)
         
         guard let httpResponse = response as? HTTPURLResponse else {
             throw APIError.invalidResponse
@@ -488,6 +547,13 @@ private struct AddUserRequest: Encodable {
 private struct UpdateStatusRequest: Encodable {
     let statusEmoji: String
     let statusText: String
+    let latitude: Double?
+    let longitude: Double?
+}
+
+private struct UpdateLocationRequest: Encodable {
+    let latitude: Double
+    let longitude: Double
 }
 
 private struct AddFriendRequest: Encodable {

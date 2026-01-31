@@ -241,9 +241,24 @@ struct ProfileView: View {
         
         // Fire and forget - don't wait for response
         Task {
+            // Check if location sharing is enabled
+            let shareLocation = UserDefaults.standard.bool(forKey: "com.clique.shareLocation")
+            var latitude: Double? = nil
+            var longitude: Double? = nil
+            
+            if shareLocation {
+                // Try to get current location
+                if let coordinate = try? await LocationManager.shared.getCurrentLocation() {
+                    latitude = coordinate.latitude
+                    longitude = coordinate.longitude
+                }
+            }
+            
             try? await APIClient.shared.updateStatus(
                 emoji: emoji,
-                text: text
+                text: text,
+                latitude: latitude,
+                longitude: longitude
             )
         }
     }
