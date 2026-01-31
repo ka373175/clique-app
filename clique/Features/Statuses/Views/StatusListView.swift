@@ -13,7 +13,12 @@ struct StatusListView: View {
     
     var body: some View {
         List(viewModel.statuses) { status in
-            StatusRowView(status: status)
+            NavigationLink(value: status) {
+                StatusRowView(status: status)
+            }
+        }
+        .navigationDestination(for: FullStatus.self) { status in
+            StatusDetailView(status: status)
         }
         .listStyle(.plain)
         .refreshable {
