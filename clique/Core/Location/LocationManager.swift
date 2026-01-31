@@ -14,6 +14,7 @@ class LocationManager: NSObject, ObservableObject {
     
     private let locationManager = CLLocationManager()
     private var locationContinuation: CheckedContinuation<CLLocationCoordinate2D, Error>?
+    private var authorizationContinuation: CheckedContinuation<Void, Error>?
     
     private override init() {
         super.init()
@@ -30,9 +31,12 @@ class LocationManager: NSObject, ObservableObject {
         
         switch status {
         case .notDetermined:
-            // Request authorization
-            locationManager.requestWhenInUseAuthorization()
-            // Wait for authorization decision
+            // First, wait for authorization
+            try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
+                self.authorizationContinuation = continuation
+                locationManager.requestWhenInUseAuthorization()
+            }
+            // Authorization granted, now request location
             return try await withCheckedThrowingContinuation { continuation in
                 self.locationContinuation = continuation
                 locationManager.requestLocation()
@@ -74,12 +78,21 @@ extension LocationManager: CLLocationManagerDelegate {
     }
     
     func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
-        // Handle authorization changes if needed
         let status = manager.authorizationStatus
         
-        if status == .denied || status == .restricted {
+        switch status {
+        case .authorizedWhenInUse, .authorizedAlways:
+            // Resume authorization continuation if waiting
+            authorizationContinuation?.resume()
+            authorizationContinuation = nil
+        case .denied, .restricted:
+            // Fail both continuations
+            authorizationContinuation?.resume(throwing: LocationError.authorizationDenied)
+            authorizationContinuation = nil
             locationContinuation?.resume(throwing: LocationError.authorizationDenied)
             locationContinuation = nil
+        default:
+            break
         }
     }
 }
