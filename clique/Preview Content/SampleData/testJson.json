@@ -1,14 +1,18 @@
 [
    {
+      "_id":"1",
       "statusText":"Playing some games!",
       "statusEmoji":"🎮",
       "firstName":"James",
-      "lastName":"Raju"
+      "lastName":"Raju",
+      "isCurrentUser":false
    },
    {
+      "_id":"2",
       "statusText":"I feel dumb today",
       "statusEmoji":"",
       "firstName":"Varun",
-      "lastName":"Gunda"
+      "lastName":"Gunda",
+      "isCurrentUser":false
    }
 ]

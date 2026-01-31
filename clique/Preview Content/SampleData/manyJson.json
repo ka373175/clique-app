@@ -4,63 +4,72 @@
         "statusText":"Playing some games!",
         "statusEmoji":"🎮",
         "firstName":"James",
-        "lastName":"Raju"
+        "lastName":"Raju",
+        "isCurrentUser":false
     },
     {
         "_id": "2",
         "statusText":"I feel dumb today",
         "statusEmoji":"",
         "firstName":"Varun",
-        "lastName":"Gunda"
+        "lastName":"Gunda",
+        "isCurrentUser":false
     },
     {
         "_id": "3",
         "statusText":"At the gym",
         "statusEmoji":"💪",
         "firstName":"Bhavika",
-        "lastName":"Chandak"
+        "lastName":"Chandak",
+        "isCurrentUser":false
     },
     {
         "_id": "4",
         "statusText":"At the mall",
         "statusEmoji":"",
         "firstName":"Lazy",
-        "lastName":"Person"
+        "lastName":"Person",
+        "isCurrentUser":false
     },
     {
         "_id": "5",
         "statusText":"Happiest ever!! I feel so ecstatic and happy and joyful that I just feel like writing an extremely long, very verbose status!! Totally not testing how wrapping works on the Clique app!!!!",
         "statusEmoji":"😁",
         "firstName":"Happy",
-        "lastName":"Guy"
+        "lastName":"Guy",
+        "isCurrentUser":false
     },
     {
         "_id": "6",
         "statusText":"Out for the day",
         "statusEmoji":"👋",
         "firstName":"Away",
-        "lastName":"Person"
+        "lastName":"Person",
+        "isCurrentUser":false
     },
     {
         "_id": "7",
         "statusText":"????",
         "statusEmoji":"❓",
         "firstName":"Questioning",
-        "lastName":"Person"
+        "lastName":"Person",
+        "isCurrentUser":false
     },
     {
         "_id": "8",
         "statusText":"YESSIR",
         "statusEmoji":"",
         "firstName":"Let's",
-        "lastName":"Go"
+        "lastName":"Go",
+        "isCurrentUser":false
     },
     {
         "_id": "9",
         "statusText":"Traffic sucks",
         "statusEmoji":"🚗",
         "firstName":"Stuck",
-        "lastName":"Traffic"
+        "lastName":"Traffic",
+        "isCurrentUser":false
     }
 ]
  
